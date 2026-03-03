@@ -1,0 +1,17 @@
+gymOS/
+├── backend/
+│   ├── main.py              ← FastAPI + todos los endpoints
+│   ├── database.py          ← SQLAlchemy + SQLite
+│   ├── face_service.py      ← InsightFace wrapper
+│   └── routes/
+│       ├── members.py
+│       ├── memberships.py
+│       ├── attendance.py
+│       ├── payments.py
+│       ├── face.py          ← registro e identificación
+│       └── settings.py
+├── frontend/
+│   └── index.html           ← Tu UI conectada al backend
+├── data/                    ← gymOS.db se crea aquí
+├── requirements.txt
+└── run.py                   ← Arranca todo
