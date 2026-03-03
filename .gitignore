@@ -16,3 +16,12 @@ __pycache__/
 # Archivos de sistema
 .DS_Store
 Thumbs.db
+
+# Base de datos
+*.db
+
+# Carpeta de datos
+data/
+
+# Archivos de audio
+*.mp3
