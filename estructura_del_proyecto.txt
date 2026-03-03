@@ -10,6 +10,7 @@ gymOS/
 │       ├── payments.py
 │       ├── face.py          ← registro e identificación
 │       └── settings.py
+│       └── auth.py
 ├── frontend/
 │   └── index.html           ← Tu UI conectada al backend
 ├── data/                    ← gymOS.db se crea aquí

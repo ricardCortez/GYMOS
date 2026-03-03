@@ -1,2 +1,18 @@
+# Entorno virtual
+venv/
+.venv/
+
+# Scripts locales de instalación
 instalar_linux.sh
 instalar_windows.bat
+
+# Archivos de entorno
+.env
+
+# Caché de Python
+__pycache__/
+*.pyc
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
