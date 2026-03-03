@@ -21,19 +21,22 @@ python3 run.py
 ```
 gymOS/
 ├── backend/
-│   ├── __init__.py
-│   ├── database.py      ← SQLAlchemy + SQLite
-│   ├── face_service.py  ← InsightFace ArcFace
-│   └── main.py          ← FastAPI API completa
+│   ├── main.py              ← FastAPI + todos los endpoints
+│   ├── database.py          ← SQLAlchemy + SQLite
+│   ├── face_service.py      ← InsightFace wrapper
+│   └── routes/
+│       ├── members.py
+│       ├── memberships.py
+│       ├── attendance.py
+│       ├── payments.py
+│       ├── face.py          ← registro e identificación
+│       └── settings.py
+│       └── auth.py
 ├── frontend/
-│   └── index.html       ← UI completa (conectada al backend)
-├── data/
-│   └── gymOS.db         ← Base de datos SQLite (se crea sola)
+│   └── index.html           ← Tu UI conectada al backend
+├── data/                    ← gymOS.db se crea aquí
 ├── requirements.txt
-├── run.py
-├── instalar.bat         ← Instalación Windows
-└── instalar.sh          ← Instalación Linux/Mac
-```
+└── run.py                   ← Arranca todo
 
 ## Modelo de Reconocimiento Facial
 
