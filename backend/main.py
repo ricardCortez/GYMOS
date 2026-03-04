@@ -68,6 +68,15 @@ def serve_appjs():
         media_type="application/javascript",
     )
 
+@app.get("/style.css")
+def serve_css():
+    return FileResponse(
+        os.path.join(FRONTEND_DIR, "style.css"),
+        media_type="text/css",
+    )
+
+# Serve all frontend static files
+app.mount("/js",     StaticFiles(directory=os.path.join(FRONTEND_DIR, "js")),     name="js")
 app.mount("/assets", StaticFiles(directory=FRONTEND_DIR), name="static")
 
 @app.on_event("startup")
