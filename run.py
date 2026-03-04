@@ -11,9 +11,14 @@ Uso:
 import sys, os, socket, subprocess, pathlib
 
 BASE_DIR = pathlib.Path(__file__).parent
-CERT_DIR = BASE_DIR / "data" / "certs"
-CERT_FILE = CERT_DIR / "cert.pem"
-KEY_FILE  = CERT_DIR / "key.pem"
+# Import paths from config (respects GYMOS_DATA_DIR env var)
+import sys
+sys.path.insert(0, str(BASE_DIR))
+from backend.config import CERTS_DIR, PORT, print_config, ensure_dirs
+CERT_DIR  = CERTS_DIR
+CERT_FILE = CERTS_DIR / "cert.pem"
+KEY_FILE  = CERTS_DIR / "key.pem"
+ensure_dirs()
 
 def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -130,7 +135,7 @@ if __name__ == "__main__":
         uvicorn.run(
             "backend.main:app",
             host="0.0.0.0",
-            port=8000,
+            port=PORT,
             reload=False,
             log_level="info",
             ssl_certfile=ssl_certfile,

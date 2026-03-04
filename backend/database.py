@@ -6,10 +6,10 @@ from sqlalchemy import (create_engine, Column, String, Float, Integer,
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from sqlalchemy.sql import func
 import os, json, uuid
+from datetime import datetime
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH  = os.path.join(BASE_DIR, "..", "data", "gymOS.db")
-os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+from .config import DB_PATH, ensure_dirs as _ensure_dirs
+_ensure_dirs()
 
 engine       = create_engine(f"sqlite:///{DB_PATH}", connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -106,6 +106,30 @@ class Setting(Base):
     value = Column(Text,   default="")
 
 
+class Promotion(Base):
+    """
+    Promociones por tiempo limitado aplicables a planes de membresía.
+    discount_type : 'percent' → porcentual (ej: 20%) | 'fixed' → monto fijo (ej: S/30)
+    applies_to    : JSON array de plan IDs. Vacío = aplica a todos los planes.
+    uses_limit    : 0 = ilimitado. >0 = se desactiva al llegar a ese número.
+    """
+    __tablename__  = "promotions"
+    id             = Column(String,  primary_key=True)
+    name           = Column(String,  nullable=False)
+    description    = Column(String,  default="")
+    code           = Column(String,  default="")
+    discount_type  = Column(String,  default="percent")
+    discount_value = Column(Float,   default=0.0)
+    applies_to     = Column(String,  default="[]")
+    start_date     = Column(String,  nullable=False)
+    end_date       = Column(String,  nullable=False)
+    start_time     = Column(String,  default="00:00")
+    end_time       = Column(String,  default="23:59")
+    uses_limit     = Column(Integer, default=0)
+    uses_count     = Column(Integer, default=0)
+    active         = Column(Boolean, default=True)
+    created_at     = Column(DateTime, default=datetime.utcnow)
+
 
 class AdminUser(Base):
     __tablename__ = "admin_users"
@@ -142,7 +166,7 @@ def _migrate_db():
     SQLite no soporta ALTER TABLE fácilmente, así que lo hacemos manualmente.
     """
     import sqlite3
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(str(DB_PATH))
     cur  = conn.cursor()
 
     def add_column_if_missing(table, column, col_type, default=None):
@@ -175,6 +199,31 @@ def _migrate_db():
         add_column_if_missing("audio_announcements", "size_kb", "INTEGER", "0")
     except Exception:
         pass
+
+    # promotions
+    try:
+        cur.execute("SELECT id FROM promotions LIMIT 1")
+    except sqlite3.OperationalError:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS promotions (
+                id             TEXT PRIMARY KEY,
+                name           TEXT NOT NULL,
+                description    TEXT DEFAULT '',
+                code           TEXT DEFAULT '',
+                discount_type  TEXT DEFAULT 'percent',
+                discount_value REAL DEFAULT 0,
+                applies_to     TEXT DEFAULT '[]',
+                start_date     TEXT NOT NULL,
+                end_date       TEXT NOT NULL,
+                start_time     TEXT DEFAULT '00:00',
+                end_time       TEXT DEFAULT '23:59',
+                uses_limit     INTEGER DEFAULT 0,
+                uses_count     INTEGER DEFAULT 0,
+                active         INTEGER DEFAULT 1,
+                created_at     DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        print("  [migración] tabla promotions creada")
 
     conn.commit()
     conn.close()

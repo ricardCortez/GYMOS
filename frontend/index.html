@@ -386,6 +386,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
     <div class="sb-item" data-view="payments"><span class="sb-icon">◆</span>Pagos</div>
     <div class="sb-sec">Operaciones</div>
     <div class="sb-item" data-view="announcements"><span class="sb-icon">▶</span>Anuncios</div>
+    <div class="sb-item" data-view="promotions"><span class="sb-icon">🏷</span>Promociones<span id="sb-promo-active" style="display:none;width:7px;height:7px;border-radius:50%;background:var(--green);margin-left:auto;animation:pulse 2s infinite"></span></div>
     <div class="sb-item" data-view="reports"><span class="sb-icon">◉</span>Reportes</div>
     <div class="sb-item" data-view="profiles"><span class="sb-icon">◑</span>Usuarios</div>
     <div class="sb-item" data-view="settings"><span class="sb-icon">◌</span>Configuración</div>
@@ -434,7 +435,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
       <div class="g2">
         <div class="panel span2">
           <div class="ph"><span class="ph-title">⚡ Check-ins de Hoy</span>
-            <button class="btn btn-ghost btn-sm" onclick="nav('attendance')">Ver todo →</button>
+            <button class="btn-s" onclick="nav('attendance')">Ver todo →</button>
           </div>
           <div id="dash-checkins" style="padding:0 4px"><div class="loading"><div class="spin"></div>Cargando...</div></div>
         </div>
@@ -458,8 +459,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
             <div class="ph">
               <span class="ph-title">📸 Reconocimiento Facial</span>
               <div style="display:flex;gap:8px">
-                <button class="btn btn-cyan btn-sm" id="cam-btn" onclick="toggleCam()">▶ Iniciar Cámara</button>
-                <button class="btn btn-ghost btn-sm" onclick="openManual()">✍ Manual</button>
+                <button class="btn-s" id="cam-btn" onclick="toggleCam()">▶ Iniciar Cámara</button>
+                <button class="btn-s" onclick="openManual()">✍ Manual</button>
               </div>
             </div>
             <div style="padding:12px">
@@ -483,7 +484,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
             <div class="ph"><span class="ph-title">🖐 Huella Dactilar</span></div>
             <div class="pb">
               <p style="font-size:12px;color:var(--t2);margin-bottom:10px">Usa WebAuthn (Windows Hello / Touch ID / lector USB)</p>
-              <button class="btn btn-ghost" style="width:100%" onclick="fpAuth()">🖐 Autenticar con Huella</button>
+              <button class="btn-s" style="width:100%" onclick="fpAuth()">🖐 Autenticar con Huella</button>
             </div>
           </div>
         </div>
@@ -521,8 +522,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
               <div>
                 <div style="font-weight:600;margin-bottom:6px;font-size:14px">Foto del Cliente</div>
                 <div style="display:flex;gap:8px;flex-wrap:wrap">
-                  <button class="btn btn-ghost btn-sm" onclick="capRegPhoto()">📷 Capturar</button>
-                  <label class="btn btn-ghost btn-sm" style="cursor:pointer">📁 Subir<input type="file" id="reg-photo-file" accept="image/*" style="display:none" onchange="loadRegPhoto(this)"></label>
+                  <button class="btn-s" onclick="capRegPhoto()">📷 Capturar</button>
+                  <label class="btn-s" style="cursor:pointer">📁 Subir<input type="file" id="reg-photo-file" accept="image/*" style="display:none" onchange="loadRegPhoto(this)"></label>
                 </div>
                 <div style="font-size:11px;color:var(--t2);margin-top:6px">Recomendado: foto frontal con buena iluminación</div>
               </div>
@@ -540,7 +541,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
             </div>
           </div>
           <div class="mf" style="border-top:1px solid var(--b1)">
-            <button class="btn btn-primary" onclick="wizNext(0)">Siguiente: Membresía →</button>
+            <button class="btn-p" onclick="wizNext(0)">Siguiente: Membresía →</button>
           </div>
         </div>
 
@@ -556,14 +557,16 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
                 <div class="fg"><label>Método de Pago</label>
                   <select id="reg-paymethod"><option>Efectivo</option><option>Tarjeta</option><option>Transferencia</option><option>Yape</option><option>Plin</option></select>
                 </div>
+                <div id="wiz-promo-container" class="fg full"></div>
+                <div id="wiz-promo-info" style="font-size:13px;padding:4px 8px"></div>
                 <div class="fg"><label>Monto a Cobrar</label><input type="number" id="reg-amount" placeholder="0.00"></div>
                 <div class="fg"><label>Referencia (Nro. operación)</label><input id="reg-payref" placeholder="Opcional"></div>
               </div>
             </div>
           </div>
           <div style="display:flex;justify-content:space-between;margin-top:14px">
-            <button class="btn btn-ghost" onclick="wizBack(1)">← Volver</button>
-            <button class="btn btn-primary" onclick="wizNext(1)">Siguiente: Reconocimiento Facial →</button>
+            <button class="btn-s" onclick="wizBack(1)">← Volver</button>
+            <button class="btn-p" onclick="wizNext(1)">Siguiente: Reconocimiento Facial →</button>
           </div>
         </div>
 
@@ -591,10 +594,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
                     <div class="face-dot" id="fd4"></div>
                   </div>
                   <div style="display:flex;gap:8px;margin-top:12px">
-                    <button class="btn btn-cyan" id="face-reg-cam-btn" onclick="startFaceRegCam()" style="flex:1">📷 Iniciar Cámara</button>
-                    <button class="btn btn-success" id="face-cap-btn" onclick="captureFacePhoto()" style="flex:1;display:none">📸 Capturar Foto</button>
+                    <button class="btn-s" id="face-reg-cam-btn" onclick="startFaceRegCam()" style="flex:1">📷 Iniciar Cámara</button>
+                    <button class="btn-p" id="face-cap-btn" onclick="captureFacePhoto()" style="flex:1;display:none">📸 Capturar Foto</button>
                   </div>
-                  <button class="btn btn-ghost btn-sm" id="face-auto-btn" onclick="toggleAutoCapture()" style="width:100%;margin-top:8px;display:none">⚡ Captura Automática: OFF</button>
+                  <button class="btn-s" id="face-auto-btn" onclick="toggleAutoCapture()" style="width:100%;margin-top:8px;display:none">⚡ Captura Automática: OFF</button>
                 </div>
                 <div>
                   <div style="font-weight:600;margin-bottom:10px;font-size:14px">Instrucciones</div>
@@ -619,10 +622,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
             </div>
           </div>
           <div style="display:flex;justify-content:space-between;margin-top:14px">
-            <button class="btn btn-ghost" onclick="wizBack(2)">← Volver</button>
+            <button class="btn-s" onclick="wizBack(2)">← Volver</button>
             <div style="display:flex;gap:8px">
-              <button class="btn btn-ghost" onclick="skipFaceReg()">Omitir por ahora</button>
-              <button class="btn btn-primary" id="wiz-face-next" onclick="submitFaceReg()" disabled>Registrar Rostro →</button>
+              <button class="btn-s" onclick="skipFaceReg()">Omitir por ahora</button>
+              <button class="btn-p" id="wiz-face-next" onclick="submitFaceReg()" disabled>Registrar Rostro →</button>
             </div>
           </div>
         </div>
@@ -634,8 +637,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
             <div class="mb" id="reg-summary"></div>
           </div>
           <div style="display:flex;justify-content:space-between;margin-top:14px">
-            <button class="btn btn-ghost" onclick="wizBack(3)">← Volver</button>
-            <button class="btn btn-success btn-lg" id="reg-final-btn" onclick="finalizeRegistration()">✅ Confirmar y Registrar</button>
+            <button class="btn-s" onclick="wizBack(3)">← Volver</button>
+            <button class="btn-p" id="reg-final-btn" onclick="finalizeRegistration()">✅ Confirmar y Registrar</button>
           </div>
         </div>
       </div>
@@ -648,7 +651,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
         <select id="mem-filter" onchange="renderMembers()" style="background:var(--s2);border:1px solid var(--b1);color:var(--text);border-radius:var(--r);padding:8px 11px;font-size:13px;min-width:150px">
           <option value="">Todos los planes</option>
         </select>
-        <button class="btn btn-primary" onclick="nav('register')">✚ Nuevo Miembro</button>
+        <button class="btn-p" onclick="nav('register')">✚ Nuevo Miembro</button>
       </div>
       <div class="member-grid" id="member-grid"></div>
     </div>
@@ -663,14 +666,14 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
       <div id="ms-plans">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
           <div style="font-size:13px;color:var(--t2)">Planes disponibles en tu gimnasio</div>
-          <button class="btn btn-primary btn-sm" onclick="openPlanModal()">✚ Nuevo Plan</button>
+          <button class="btn-p" onclick="openPlanModal()">✚ Nuevo Plan</button>
         </div>
         <div class="plan-grid" id="plan-grid"></div>
       </div>
       <div id="ms-active" style="display:none">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
           <div class="search-wrap" style="min-width:220px"><input id="ms-q" placeholder="Buscar miembro..." oninput="renderMemberships()"></div>
-          <button class="btn btn-primary btn-sm" onclick="openAssignMs()">✚ Asignar Membresía</button>
+          <button class="btn-p" onclick="openAssignMs()">✚ Asignar Membresía</button>
         </div>
         <div class="panel"><table class="tbl"><thead><tr><th>Miembro</th><th>Plan</th><th>Inicio</th><th>Vencimiento</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="ms-tbody"></tbody></table></div>
       </div>
@@ -683,7 +686,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
     <div id="view-payments" class="view">
       <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
         <div class="search-wrap" style="flex:1;min-width:200px"><input id="pay-q" placeholder="Buscar pago..." oninput="renderPayments()"></div>
-        <button class="btn btn-primary btn-sm" onclick="openPayModal()">✚ Registrar Pago</button>
+        <button class="btn-p" onclick="openPayModal()">✚ Registrar Pago</button>
       </div>
       <div class="stats-row" id="pay-kpis"></div>
       <div class="panel">
@@ -728,8 +731,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
                 </div>
               </div>
               <div style="display:flex;gap:8px">
-                <button class="btn btn-primary" onclick="speakNow()" style="flex:1">▶ Anunciar con Voz</button>
-                <button class="btn btn-ghost" onclick="stopSpeak()">⏹</button>
+                <button class="btn-p" onclick="speakNow()" style="flex:1">▶ Anunciar con Voz</button>
+                <button class="btn-s" onclick="stopSpeak()">⏹</button>
               </div>
             </div>
           </div>
@@ -737,7 +740,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
           <div class="panel" style="margin-bottom:12px">
             <div class="ph">
               <span class="ph-title">🎵 Archivos de Audio</span>
-              <label class="btn btn-primary btn-sm" style="cursor:pointer">
+              <label class="btn-p" style="cursor:pointer">
                 ✚ Subir Audio
                 <input type="file" id="audio-upload-input" accept=".mp3,.wav,.ogg,.m4a" style="display:none" onchange="uploadAudioFile(this)">
               </label>
@@ -754,7 +757,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 
           <div class="panel">
             <div class="ph"><span class="ph-title">⏰ Anuncios Programados</span>
-              <button class="btn btn-primary btn-sm" onclick="openAnnModal()">✚ Programar</button>
+              <button class="btn-p" onclick="openAnnModal()">✚ Programar</button>
             </div>
             <div class="pb" id="ann-list" style="padding:8px 12px;display:flex;flex-direction:column;gap:8px"></div>
           </div>
@@ -776,7 +779,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
                 <div class="fg"><label>Apertura</label><input type="time" id="open-time" value="06:00"></div>
                 <div class="fg"><label>Cierre</label><input type="time" id="close-time" value="22:00"></div>
               </div>
-              <button class="btn btn-ghost" style="width:100%;margin-top:12px" onclick="saveHours()">Guardar Horario</button>
+              <button class="btn-s" style="width:100%;margin-top:12px" onclick="saveHours()">Guardar Horario</button>
             </div>
           </div>
         </div>
@@ -803,6 +806,38 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
           <div class="ph"><span class="ph-title">📊 Distribución de Planes</span></div>
           <div class="pb"><div class="ch-wrap"><canvas id="plan-chart"></canvas></div></div>
         </div>
+        <div class="panel span2">
+          <div class="ph"><span class="ph-title">🕐 Horas Pico — Distribución de Asistencia por Hora</span></div>
+          <div class="pb"><div class="ch-wrap" style="height:200px"><canvas id="hour-chart"></canvas></div></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><span class="ph-title">🏆 Miembros Más Asiduos</span>
+            <span style="font-size:11px;color:var(--t2)" id="rep-top-period"></span>
+          </div>
+          <div class="pb" id="rep-top-members" style="padding:8px 16px">
+            <div class="loading"><div class="spin"></div>Cargando...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PROMOTIONS ════════════════════════════════ -->
+    <div id="view-promotions" class="view">
+      <!-- Active promotions banner strip -->
+      <div id="promo-banners" style="display:none;gap:10px;flex-wrap:wrap;margin-bottom:14px"></div>
+
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div>
+          <div style="font-size:22px;font-weight:800">🏷️ Promociones</div>
+          <div style="font-size:12px;color:var(--t2);margin-top:2px">Descuentos por tiempo limitado para tus planes</div>
+        </div>
+        <button class="btn-p" onclick="openPromoModal()">＋ Nueva Promoción</button>
+      </div>
+
+      <!-- Promo cards grid -->
+      <div id="promo-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px">
+        <div class="loading"><div class="spin"></div>Cargando...</div>
       </div>
     </div>
 
@@ -823,7 +858,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
                 <select id="set-tz"><option value="-5">GMT-5 Lima/Bogotá</option><option value="-6">GMT-6 CDMX</option><option value="-3">GMT-3 Bs. Aires</option><option value="0">GMT+0 Madrid</option></select>
               </div>
             </div>
-            <button class="btn btn-primary" style="margin-top:14px" onclick="saveSettings()">💾 Guardar</button>
+            <button class="btn-p" style="margin-top:14px" onclick="saveSettings()">💾 Guardar</button>
           </div>
         </div>
         <div class="panel" style="margin-bottom:14px">
@@ -842,15 +877,15 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
                 <option value="300">5 min</option><option value="1800">30 min</option><option value="3600" selected>1 hora</option><option value="14400">4 horas</option><option value="86400">1 día</option>
               </select>
             </div>
-            <button class="btn btn-ghost" style="width:100%;margin-top:12px" onclick="saveSettings()">Guardar Configuración</button>
+            <button class="btn-s" style="width:100%;margin-top:12px" onclick="saveSettings()">Guardar Configuración</button>
           </div>
         </div>
         <div class="panel">
           <div class="ph"><span class="ph-title">🗄 Datos del Sistema</span></div>
           <div class="pb">
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn btn-ghost" onclick="exportDB()">📤 Exportar</button>
-              <button class="btn btn-ghost" onclick="importDB()">📥 Importar</button>
+              <button class="btn-s" onclick="exportDB()">📤 Exportar</button>
+              <button class="btn-s" onclick="importDB()">📥 Importar</button>
             </div>
             <input type="file" id="import-file" accept=".json" style="display:none" onchange="doImport(this)">
           </div>
@@ -863,7 +898,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
     <div id="view-profiles" class="view">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
         <div style="font-size:13px;color:var(--t2)">Gestiona los accesos al sistema GymOS</div>
-        <button class="btn btn-primary" id="add-profile-btn" onclick="openProfileModal()">✚ Nuevo Usuario</button>
+        <button class="btn-p" id="add-profile-btn" onclick="openProfileModal()">✚ Nuevo Usuario</button>
       </div>
       <div class="profile-grid" id="profile-grid"></div>
     </div>
@@ -885,5 +920,5 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 
 
 <script src="app.js"></script>
+
 </body>
-</html>

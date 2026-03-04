@@ -188,7 +188,7 @@ function startFaceLoop() {
       if (res.identified) {
         if (statusEl) { statusEl.textContent = `✅ ${res.member.name}`; statusEl.style.color = 'var(--green)'; }
         showRecogCard(res.member, res.confidence);
-        autoCheckin(res.member_id, res.confidence, res.member.name);
+        autoCheckin(res.member_id, res.confidence, res.member.name, res.member.days_left, res.member.membership_active);
       } else {
         if (statusEl) { statusEl.textContent = '🔍 ESCANEANDO...'; statusEl.style.color = ''; }
         const rc = document.getElementById('recog-card');
@@ -221,7 +221,7 @@ function showRecogCard(member, confidence) {
   setTimeout(() => { if (c) c.style.display = 'none'; }, 4500);
 }
 
-async function autoCheckin(memberId, confidence, memberName) {
+async function autoCheckin(memberId, confidence, memberName, daysLeft, membershipActive) {
   const cooldown = (CFG.checkinCooldown || 3600) * 1000;
   const now = Date.now();
   if (lastCheckins[memberId] && (now - lastCheckins[memberId]) < cooldown) return;
@@ -236,8 +236,11 @@ async function autoCheckin(memberId, confidence, memberName) {
         wrap.appendChild(flash);
         setTimeout(() => flash.remove(), 700);
       }
-      const name = (memberName || res.member_name || '').split(' ')[0];
-      if (document.getElementById('tog-welcome')?.checked) speak(`Bienvenido ${name}!`);
+      const fullName  = memberName || res.member_name || '';
+      const firstName = fullName.split(' ')[0];
+      if (document.getElementById('tog-welcome')?.checked) {
+        speakWelcome(firstName, null, daysLeft);
+      }
       renderTodayLog();
       toast(`✅ Check-in: ${memberName || res.member_name}`, 'ok');
     }
@@ -667,6 +670,7 @@ const VIEWS = {
   memberships:   ['Membresías','Planes y contratos activos'],
   payments:      ['Pagos','Historial de cobros'],
   announcements: ['Anuncios','Mensajes de voz programados'],
+  promotions:    ['Promociones','Descuentos y ofertas por tiempo limitado'],
   reports:       ['Reportes','Estadísticas y análisis'],
   settings:      ['Configuración','Ajustes del sistema'],
 };
@@ -688,6 +692,7 @@ function nav(id) {
   if (id === 'payments')    loadAndRenderPay();
   if (id === 'reports')     setTimeout(renderReports, 120);
   if (id === 'announcements') loadAndRenderAnn();
+  if (id === 'promotions')   loadPromotions();
   if (id === 'settings')    loadSettings();
   if (id === 'register')    initRegWizard();
 }
@@ -781,15 +786,31 @@ async function renderDashboard() {
 }
 
 function attRow(a) {
-  const t = new Date(a.check_in);
+  const t  = new Date(a.check_in);
   const ts = t.getHours().toString().padStart(2,'0') + ':' + t.getMinutes().toString().padStart(2,'0');
-  const methodBadge = a.method==='facial'?'<span class="badge bb">👁 Facial</span>':
-                      a.method==='fingerprint'?'<span class="badge bp">🖐 Huella</span>':
-                      '<span class="badge bgr">✍ Manual</span>';
-  return `<div class="att-row">
+
+  const methodBadge =
+    a.method === 'facial'      ? '<span class="badge bb">👁 Facial</span>'      :
+    a.method === 'fingerprint' ? '<span class="badge bp">🖐 Huella</span>'      :
+    a.method === 'qr'          ? '<span class="badge bc">◼ QR</span>'           :
+                                 '<span class="badge bgr">✍ Manual</span>';
+
+  const deletedStyle = a.deleted ? 'opacity:.5;' : '';
+  const deletedBadge = a.deleted ? '<span class="badge" style="background:rgba(239,71,111,.1);color:var(--red);border:1px solid rgba(239,71,111,.3);font-size:10px">eliminado</span>' : '';
+
+  const avatarContent = a.member_avatar
+    ? `<img src="${a.member_avatar}">`
+    : `<span style="font-size:13px;color:${a.deleted ? 'var(--red)' : ''}">${a.deleted ? '✕' : (a.member_name||'?')[0]}</span>`;
+
+  return `<div class="att-row" style="${deletedStyle}">
     <div class="att-time">${ts}</div>
-    <div class="att-av">${a.member_avatar?`<img src="${a.member_avatar}">`:(a.member_name||'?')[0]}</div>
-    <div style="flex:1"><div style="font-weight:600;font-size:13px">${a.member_name}</div><div style="font-size:11px;color:var(--t2)">${a.plan||'—'}</div></div>
+    <div class="att-av" style="${a.deleted ? 'border-color:rgba(239,71,111,.3);background:rgba(239,71,111,.08)' : ''}">${avatarContent}</div>
+    <div style="flex:1;min-width:0">
+      <div style="font-weight:600;font-size:13px;display:flex;align-items:center;gap:6px">
+        ${a.member_name} ${deletedBadge}
+      </div>
+      <div style="font-size:11px;color:var(--t2)">${a.plan||'—'}</div>
+    </div>
     ${methodBadge}
   </div>`;
 }
@@ -857,16 +878,63 @@ function openManual() {
 // ══════════════════════════════════════════════════════════════
 
 function initRegWizard() {
+  // Reset state
   REG = { step: 0, memberId: null, planId: null };
-  REG_photos   = [];
+  REG_photos    = [];
   REG_capturing = false;
-  showWizStep(0);
-  // Load plans for step 2
-  loadPlansForReg();
-  // Set default start date
-  const today = new Date().toISOString().slice(0,10);
+
+  // ── Limpiar campos del paso 1 (datos personales) ──────────
+  const clearIds = [
+    'reg-name','reg-doc','reg-email','reg-phone',
+    'reg-birth','reg-address','reg-emergency','reg-notes',
+    'reg-photo-data',
+  ];
+  clearIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+
+  // Limpiar avatar preview
+  const av = document.getElementById('reg-av-preview');
+  if (av) av.innerHTML = '<span style="font-size:28px;opacity:.4">📷</span>';
+
+  // ── Limpiar campos del paso 2 (membresía) ─────────────────
+  const amountEl = document.getElementById('reg-amount');
+  const refEl    = document.getElementById('reg-ref');
+  const notesEl  = document.getElementById('reg-ms-notes');
+  if (amountEl) amountEl.value = '';
+  if (refEl)    refEl.value    = '';
+  if (notesEl)  notesEl.value  = '';
+
+  // Deseleccionar plan activo
+  document.querySelectorAll('.plan-card.selected').forEach(c => c.classList.remove('selected'));
+  REG.planId = null;
+
+  // ── Limpiar paso 3 (fotos faciales) ───────────────────────
+  updateFaceDots();
+  updateFaceThumbs();
+  const sampleCount = document.getElementById('face-sample-count');
+  if (sampleCount) sampleCount.textContent = '0 / 5 fotos';
+  setFaceStatus('📷 Inicia la cámara y toma 5 fotos', '');
+
+  // Detener cámara si quedó abierta de una sesión anterior
+  if (REG_faceStream) stopFaceRegCam();
+  const capBtn = document.getElementById('face-cap-btn');
+  if (capBtn) { capBtn.disabled = false; capBtn.style.display = 'none'; }
+  const regCamBtn = document.getElementById('face-reg-cam-btn');
+  if (regCamBtn) regCamBtn.style.display = 'flex';
+
+  // ── Fecha de inicio por defecto = hoy ─────────────────────
+  const today = new Date().toISOString().slice(0, 10);
   const sd = document.getElementById('reg-start');
   if (sd) sd.value = today;
+
+  // Método de pago por defecto
+  const pm = document.getElementById('reg-payment-method');
+  if (pm) pm.value = 'Efectivo';
+
+  showWizStep(0);
+  loadPlansForReg();
 }
 
 function showWizStep(step) {
@@ -1007,6 +1075,8 @@ function selectRegPlan(id) {
     const amt = document.getElementById('reg-amount');
     if (amt) amt.value = plan.price;
   }
+  // Load available promotions for this plan
+  onWizPlanSelected(id);
 }
 
 function loadRegPhoto(input) {
@@ -1313,28 +1383,120 @@ function openPayModal() {
 // ══════════════════════════════════════════════════════════════
 let synth = window.speechSynthesis;
 let voices = [];
+let _bestVoice = null;   // voz más natural detectada automáticamente
+
+// ── Ranking de voces: prefiere voces neurales/online ──────────
+function _rankVoice(v) {
+  const n = (v.name || '').toLowerCase();
+  const l = (v.lang || '').toLowerCase();
+  let score = 0;
+  // Idioma español preferido
+  if (l.startsWith('es')) score += 100;
+  if (l === 'es-es' || l === 'es-mx' || l === 'es-us') score += 10;
+  // Voces neurales (Microsoft Edge, Google)
+  if (n.includes('neural'))    score += 80;
+  if (n.includes('natural'))   score += 60;
+  if (n.includes('google'))    score += 50;
+  if (n.includes('microsoft')) score += 40;
+  // Voces online generalmente son mejores
+  if (!v.localService)         score += 30;
+  // Voces femeninas tienden a sonar más naturales en español
+  if (n.includes('female') || n.includes('mujer') || n.includes('paulina') ||
+      n.includes('laura') || n.includes('helena') || n.includes('dalia') ||
+      n.includes('sabina') || n.includes('paloma') || n.includes('elvira')) score += 20;
+  return score;
+}
 
 function loadVoices() {
-  voices = synth.getVoices().filter(v => v.lang.startsWith('es'));
-  if (!voices.length) voices = synth.getVoices();
+  const all = synth.getVoices();
+  voices = all.filter(v => v.lang.startsWith('es'));
+  if (!voices.length) voices = all;
+
+  // Ordenar por calidad y guardar la mejor
+  voices.sort((a, b) => _rankVoice(b) - _rankVoice(a));
+  _bestVoice = voices[0] || null;
+
   const sel = document.getElementById('ann-voice');
-  if (sel) sel.innerHTML = voices.map((v,i)=>`<option value="${i}">${v.name} (${v.lang})</option>`).join('');
+  if (sel) {
+    sel.innerHTML = voices.map((v, i) => {
+      const quality = !v.localService ? '⭐ ' : '';
+      return `<option value="${i}">${quality}${v.name} (${v.lang})</option>`;
+    }).join('');
+  }
 }
 if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = loadVoices;
-loadVoices();
+setTimeout(loadVoices, 200);   // Chrome necesita un pequeño delay
 
-function speak(text) {
-  if (!synth) return;
+// ── speak() genérico con parámetros ───────────────────────────
+function speak(text, opts = {}) {
+  if (!synth || !text) return;
+
+  // Referencia a audio file
+  if (text.startsWith('__audio__')) {
+    const audioId = text.replace('__audio__', '');
+    const af = AUDIO_FILES.find(f => f.id === audioId);
+    if (af) { playAudioFile(af.id, af.url, af.name); return; }
+  }
+
   synth.cancel();
-  const u = new SpeechSynthesisUtterance(text);
+
+  // Mejorar el texto para que suene más natural:
+  // Agregar pausas con comas donde el texto las necesita
+  let naturalText = text
+    .replace(/([.!?])\s+/g, '$1... ')          // pausa después de puntuación
+    .replace(/,/g, ', ')                         // asegurar espacio después de coma
+    .trim();
+
+  const u = new SpeechSynthesisUtterance(naturalText);
   u.lang = 'es-PE';
+
+  // Seleccionar voz: del selector si está visible, sino la mejor automática
   const sel = document.getElementById('ann-voice');
-  if (sel && voices.length) u.voice = voices[parseInt(sel.value)||0];
-  const rate = document.getElementById('ann-rate');
-  u.rate = rate ? parseFloat(rate.value) : 1;
+  if (sel && voices.length && sel.offsetParent !== null) {
+    u.voice = voices[parseInt(sel.value) || 0];
+  } else if (_bestVoice) {
+    u.voice = _bestVoice;
+  }
+
+  // Parámetros: los del panel de anuncios si existen, sino los opts, sino defaults naturales
+  const rateEl  = document.getElementById('ann-rate');
+  const pitchEl = document.getElementById('ann-pitch');
+  const volEl   = document.getElementById('ann-vol');
+
+  u.rate   = opts.rate   ?? (rateEl  ? parseFloat(rateEl.value)  : 0.88);
+  u.pitch  = opts.pitch  ?? (pitchEl ? parseFloat(pitchEl.value) : 1.05);
+  u.volume = opts.volume ?? (volEl   ? parseFloat(volEl.value)   : 1.0);
+
   synth.speak(u);
 }
-function speakNow() { const m = document.getElementById('ann-instant')?.value; if(m) speak(m); }
+
+// ── speakWelcome: voz natural para bienvenida en check-in ─────
+function speakWelcome(firstName, planName, daysLeft) {
+  let msg;
+  const hour = new Date().getHours();
+
+  const greeting = hour < 12 ? 'Buenos días' :
+                   hour < 19 ? 'Buenas tardes' : 'Buenas noches';
+
+  if (daysLeft !== undefined && daysLeft <= 3 && daysLeft >= 0) {
+    msg = `${greeting}, ${firstName}. Tu membresía vence en ${daysLeft} día${daysLeft !== 1 ? 's' : ''}. Recuerda renovarla.`;
+  } else if (daysLeft !== undefined && daysLeft < 0) {
+    msg = `Hola, ${firstName}. Tu membresía ha vencido. Por favor acércate a recepción.`;
+  } else {
+    // Variar el mensaje para que no sea siempre igual
+    const msgs = [
+      `${greeting}, ${firstName}. Bienvenido al gimnasio.`,
+      `${greeting}, ${firstName}. Que tengas un excelente entrenamiento.`,
+      `Hola, ${firstName}. ¡Mucho ánimo en tu entrenamiento de hoy!`,
+      `${greeting}, ${firstName}. Bienvenido. ¡A dar todo hoy!`,
+    ];
+    msg = msgs[Math.floor(Math.random() * msgs.length)];
+  }
+
+  speak(msg, { rate: 0.9, pitch: 1.05, volume: 1.0 });
+}
+
+function speakNow() { const m = document.getElementById('ann-instant')?.value; if (m) speak(m); }
 function stopSpeak() { synth?.cancel(); }
 
 let lastAnnounced = {};
@@ -1433,51 +1595,211 @@ async function saveHours() {
 let charts = {};
 async function renderReports() {
   try {
-    const days = parseInt(document.getElementById('rep-days')?.value||'30');
-    const [stats, attStats, ms, pays] = await Promise.all([
-      GET('/dashboard'), GET('/attendance/stats?days='+days),
-      GET('/memberships'), GET('/payments')
+    const days = parseInt(document.getElementById('rep-days')?.value || '30');
+
+    const [stats, attStats, byHour, topMembers, ms, pays] = await Promise.all([
+      GET('/dashboard'),
+      GET('/attendance/stats?days=' + days),
+      GET('/attendance/by-hour?days=' + days),
+      GET('/attendance/top-members?days=' + days + '&limit=8'),
+      GET('/memberships'),
+      GET('/payments'),
     ]);
 
+    // ── KPIs ──────────────────────────────────────────────────
+    const avgPerDay = days > 0
+      ? (Object.values(attStats).reduce((s,v)=>s+v,0) / days).toFixed(1)
+      : 0;
+    const expiringSoon = ms.filter(m => m.active && m.days_left <= 7).length;
+
     document.getElementById('rep-kpis').innerHTML = `
-      <div class="kpi" style="--kpi-c:var(--cyan)"><div class="kpi-val">${stats.total_members}</div><div class="kpi-lbl">Total Miembros</div></div>
-      <div class="kpi" style="--kpi-c:var(--green)"><div class="kpi-val">${stats.active_ms}</div><div class="kpi-lbl">Membresías Activas</div></div>
-      <div class="kpi" style="--kpi-c:var(--orange)"><div class="kpi-val">${CFG.currency}${(stats.month_revenue||0).toLocaleString()}</div><div class="kpi-lbl">Ingresos del Mes</div></div>
-      <div class="kpi" style="--kpi-c:var(--purple)"><div class="kpi-val">${stats.face_registered}</div><div class="kpi-lbl">Con Reconocimiento Facial</div></div>
+      <div class="kpi" style="--kpi-c:var(--cyan)">
+        <div class="kpi-val">${stats.total_members}</div>
+        <div class="kpi-lbl">Total Miembros</div>
+      </div>
+      <div class="kpi" style="--kpi-c:var(--green)">
+        <div class="kpi-val">${stats.active_ms}</div>
+        <div class="kpi-lbl">Membresías Activas</div>
+      </div>
+      <div class="kpi" style="--kpi-c:var(--orange)">
+        <div class="kpi-val">${CFG.currency}${(stats.month_revenue||0).toLocaleString()}</div>
+        <div class="kpi-lbl">Ingresos del Mes</div>
+      </div>
+      <div class="kpi" style="--kpi-c:var(--purple)">
+        <div class="kpi-val">${avgPerDay}</div>
+        <div class="kpi-lbl">Asistencia Promedio/Día</div>
+      </div>
+      <div class="kpi" style="--kpi-c:var(--yellow)">
+        <div class="kpi-val">${expiringSoon}</div>
+        <div class="kpi-lbl">Membresías por Vencer (7d)</div>
+      </div>
+      <div class="kpi" style="--kpi-c:var(--cyan)">
+        <div class="kpi-val">${stats.face_registered}</div>
+        <div class="kpi-lbl">Con Reconocimiento Facial</div>
+      </div>
     `;
 
-    // Attendance chart
-    const attLabels=[], attData=[];
+    // ── Gráfico 1: Asistencia diaria (línea) ──────────────────
+    const attLabels = [], attData = [];
     const now = new Date();
-    for (let i=days-1;i>=0;i--) {
-      const d=new Date(now); d.setDate(d.getDate()-i);
-      const ds=d.toISOString().slice(0,10);
-      attLabels.push(days<=14 ? d.getDate()+'/'+(d.getMonth()+1) : (i%4===0?d.getDate()+'/'+(d.getMonth()+1):''));
-      attData.push(attStats[ds]||0);
+    for (let i = days - 1; i >= 0; i--) {
+      const d  = new Date(now); d.setDate(d.getDate() - i);
+      const ds = d.toISOString().slice(0, 10);
+      const label = days <= 14
+        ? d.getDate() + '/' + (d.getMonth() + 1)
+        : (i % Math.ceil(days / 10) === 0 ? d.getDate() + '/' + (d.getMonth() + 1) : '');
+      attLabels.push(label);
+      attData.push(attStats[ds] || 0);
     }
     const attCtx = document.getElementById('att-chart');
     if (charts.att) charts.att.destroy();
-    charts.att = new Chart(attCtx, { type:'line', data:{ labels:attLabels, datasets:[{data:attData,borderColor:'var(--cyan)',backgroundColor:'rgba(0,212,255,.08)',fill:true,tension:.4,pointRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#8890c0',maxRotation:0}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#8890c0',stepSize:1}}}}});
+    charts.att = new Chart(attCtx, {
+      type: 'line',
+      data: {
+        labels: attLabels,
+        datasets: [{
+          label: 'Asistencias',
+          data: attData,
+          borderColor: 'rgba(0,212,255,1)',
+          backgroundColor: 'rgba(0,212,255,.08)',
+          fill: true, tension: 0.4, pointRadius: 2, pointHoverRadius: 5,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: {
+          title: (items) => 'Fecha: ' + (attLabels[items[0].dataIndex] || ''),
+          label: (item) => 'Asistencias: ' + item.raw,
+        }}},
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#8890c0', maxRotation: 0 }},
+          y: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#8890c0', stepSize: 1 }, beginAtZero: true },
+        },
+      }
+    });
 
-    // Revenue chart
-    const revLabels=[], revData=[];
-    for (let i=5;i>=0;i--) {
-      const d=new Date(now); d.setMonth(d.getMonth()-i); d.setDate(1);
-      revLabels.push(MONTHS[d.getMonth()]);
-      const rev = pays.filter(p=>{const pd=new Date(p.date);return pd.getFullYear()===d.getFullYear()&&pd.getMonth()===d.getMonth();}).reduce((s,p)=>s+p.amount,0);
+    // ── Gráfico 2: Ingresos mensuales (barras) ────────────────
+    const revLabels = [], revData = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now); d.setMonth(d.getMonth() - i); d.setDate(1);
+      revLabels.push(MONTHS[d.getMonth()] + ' ' + d.getFullYear().toString().slice(2));
+      const rev = pays
+        .filter(p => { const pd = new Date(p.date); return pd.getFullYear()===d.getFullYear() && pd.getMonth()===d.getMonth(); })
+        .reduce((s, p) => s + p.amount, 0);
       revData.push(rev);
     }
     const revCtx = document.getElementById('rev-chart');
     if (charts.rev) charts.rev.destroy();
-    charts.rev = new Chart(revCtx, { type:'bar', data:{ labels:revLabels, datasets:[{data:revData,backgroundColor:'rgba(255,107,0,.65)',borderColor:'var(--orange)',borderWidth:2,borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#8890c0'}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#8890c0',callback:v=>CFG.currency+v}}}}});
+    charts.rev = new Chart(revCtx, {
+      type: 'bar',
+      data: {
+        labels: revLabels,
+        datasets: [{
+          label: 'Ingresos',
+          data: revData,
+          backgroundColor: revData.map((_, i) => i === revData.length - 1 ? 'rgba(255,107,0,.9)' : 'rgba(255,107,0,.45)'),
+          borderColor: 'rgba(255,107,0,1)',
+          borderWidth: 2, borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: {
+          label: (item) => CFG.currency + item.raw.toLocaleString(),
+        }}},
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#8890c0' }},
+          y: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#8890c0', callback: v => CFG.currency + v.toLocaleString() }, beginAtZero: true },
+        },
+      }
+    });
 
-    // Plans donut
-    const planCounts = {}; PLANS.forEach(p=>{planCounts[p.id]=0;});
-    ms.filter(m=>m.active).forEach(m=>{if(planCounts[m.plan_id]!==undefined)planCounts[m.plan_id]++;});
+    // ── Gráfico 3: Distribución por plan (dona) ───────────────
+    const planCounts = {};
+    PLANS.forEach(p => { planCounts[p.id] = 0; });
+    ms.filter(m => m.active).forEach(m => { if (planCounts[m.plan_id] !== undefined) planCounts[m.plan_id]++; });
     const planCtx = document.getElementById('plan-chart');
     if (charts.plan) charts.plan.destroy();
-    charts.plan = new Chart(planCtx, { type:'doughnut', data:{labels:PLANS.map(p=>p.name),datasets:[{data:PLANS.map(p=>planCounts[p.id]||0),backgroundColor:['rgba(255,107,0,.8)','rgba(0,212,255,.8)','rgba(0,229,160,.8)','rgba(170,85,255,.8)'],borderColor:'var(--s1)',borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#8890c0',padding:12,boxWidth:12}}}}});
-  } catch(e) { toast('Error reportes: '+e.message,'er'); }
+    charts.plan = new Chart(planCtx, {
+      type: 'doughnut',
+      data: {
+        labels: PLANS.map(p => p.name),
+        datasets: [{
+          data: PLANS.map(p => planCounts[p.id] || 0),
+          backgroundColor: ['rgba(255,107,0,.85)','rgba(0,212,255,.85)','rgba(0,229,160,.85)','rgba(170,85,255,.85)','rgba(255,209,102,.85)'],
+          borderColor: 'var(--s1)', borderWidth: 3,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { color: '#8890c0', padding: 14, boxWidth: 14 }},
+          tooltip: { callbacks: { label: (item) => ` ${item.label}: ${item.raw} miembro${item.raw !== 1 ? 's' : ''}` }}
+        },
+      }
+    });
+
+    // ── Gráfico 4: Horas pico (barras horizontales) ───────────
+    const hourLabels = Array.from({length: 24}, (_,h) => h + ':00');
+    const hourData   = hourLabels.map((_, h) => byHour[String(h)] || 0);
+    const maxHour    = Math.max(...hourData);
+    const hourCtx    = document.getElementById('hour-chart');
+    if (hourCtx) {
+      if (charts.hour) charts.hour.destroy();
+      charts.hour = new Chart(hourCtx, {
+        type: 'bar',
+        data: {
+          labels: hourLabels,
+          datasets: [{
+            label: 'Asistencias',
+            data: hourData,
+            backgroundColor: hourData.map(v => {
+              const intensity = maxHour > 0 ? v / maxHour : 0;
+              return `rgba(0,229,160,${0.15 + intensity * 0.75})`;
+            }),
+            borderColor: 'rgba(0,229,160,.6)',
+            borderWidth: 1, borderRadius: 3,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { callbacks: {
+            label: (item) => 'Asistencias: ' + item.raw,
+          }}},
+          scales: {
+            x: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#8890c0', maxRotation: 0,
+              callback: (_, i) => [6,8,10,12,14,16,18,20,22].includes(i) ? hourLabels[i] : '',
+            }},
+            y: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#8890c0', stepSize: 1 }, beginAtZero: true },
+          },
+        }
+      });
+    }
+
+    // ── Top miembros más asiduos ───────────────────────────────
+    const topEl = document.getElementById('rep-top-members');
+    if (topEl) {
+      if (!topMembers.length) {
+        topEl.innerHTML = '<div style="font-size:12px;color:var(--t3);text-align:center;padding:12px">Sin datos en este período</div>';
+      } else {
+        const maxCount = topMembers[0]?.count || 1;
+        topEl.innerHTML = topMembers.map((m, i) => `
+          <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--b1)">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:var(--t3);width:22px;text-align:center">${i + 1}</div>
+            <div style="width:32px;height:32px;border-radius:50%;background:var(--s3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;overflow:hidden">
+              ${m.avatar ? `<img src="${m.avatar}" style="width:100%;height:100%;object-fit:cover">` : m.member_name[0]}
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.member_name}</div>
+              <div style="height:4px;background:var(--s3);border-radius:2px;margin-top:4px">
+                <div style="height:100%;width:${Math.round(m.count/maxCount*100)}%;background:var(--cyan);border-radius:2px;transition:width .4s"></div>
+              </div>
+            </div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--cyan)">${m.count}</div>
+          </div>`).join('');
+      }
+    }
+
+  } catch(e) { toast('Error en reportes: ' + e.message, 'er'); }
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2103,3 +2425,363 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Show login
   document.getElementById('login-screen').style.display = 'flex';
 });
+
+
+// ══════════════════════════════════════════════════════════════
+//  PROMOTIONS
+// ══════════════════════════════════════════════════════════════
+
+let _editingPromoId = null;
+
+// ── Helpers ───────────────────────────────────────────────────
+function _fmtCountdown(seconds) {
+  if (seconds <= 0) return '00:00:00';
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (d > 0) return `${d}d ${h}h ${m}m`;
+  return [h,m,s].map(n => String(n).padStart(2,'0')).join(':');
+}
+
+function _promoStatusBadge(p) {
+  if (!p.active)      return '<span class="badge" style="background:rgba(255,255,255,.05);color:var(--t2)">Desactivada</span>';
+  if (!p.now_active) {
+    const now = new Date();
+    const start = new Date(p.start_date + 'T' + p.start_time);
+    if (start > now) return '<span class="badge" style="background:rgba(0,212,255,.1);color:var(--cyan)">Próximamente</span>';
+    return '<span class="badge" style="background:rgba(239,71,111,.1);color:var(--red)">Expirada</span>';
+  }
+  return '<span class="badge" style="background:rgba(0,229,160,.15);color:var(--green);animation:pulse 2s infinite">● Activa</span>';
+}
+
+function _discountLabel(p) {
+  return p.discount_type === 'percent'
+    ? `${p.discount_value}% OFF`
+    : `${CFG.currency}${p.discount_value} OFF`;
+}
+
+// ── Load & Render ──────────────────────────────────────────────
+async function loadPromotions() {
+  // Clear old countdown timers
+  Object.values(PROMO_TIMERS).forEach(clearInterval);
+  PROMO_TIMERS = {};
+
+  try {
+    PROMOTIONS = await GET('/promotions');
+    renderPromoGrid();
+    renderPromoBanners();
+    updatePromoSidebarBadge();
+  } catch(e) { toast('Error cargando promociones: ' + e.message, 'er'); }
+}
+
+function renderPromoGrid() {
+  const grid = document.getElementById('promo-grid');
+  if (!grid) return;
+
+  if (!PROMOTIONS.length) {
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1">
+      <div class="eico">🏷️</div>
+      <div class="etxt">Sin promociones creadas</div>
+      <div class="esub">Crea tu primera promoción para atraer nuevos miembros</div>
+    </div>`;
+    return;
+  }
+
+  // Sort: active first, then upcoming, then expired
+  const sorted = [...PROMOTIONS].sort((a, b) => {
+    const score = p => p.now_active ? 2 : (p.active ? 1 : 0);
+    return score(b) - score(a);
+  });
+
+  grid.innerHTML = sorted.map(p => _promoCard(p)).join('');
+
+  // Start countdown timers for active promos
+  sorted.filter(p => p.now_active && p.seconds_left > 0).forEach(p => {
+    let secs = p.seconds_left;
+    PROMO_TIMERS[p.id] = setInterval(() => {
+      secs--;
+      const el = document.getElementById(`cd-${p.id}`);
+      if (el) el.textContent = _fmtCountdown(secs);
+      if (secs <= 0) {
+        clearInterval(PROMO_TIMERS[p.id]);
+        loadPromotions(); // refresh when expired
+      }
+    }, 1000);
+  });
+}
+
+function _promoCard(p) {
+  const isActive   = p.now_active;
+  const borderColor = isActive ? 'var(--orange)' : 'var(--b1)';
+  const plans       = p.plan_names.length ? p.plan_names.join(', ') : 'Todos los planes';
+  const usesInfo    = p.uses_limit > 0
+    ? `${p.uses_count} / ${p.uses_limit} usos`
+    : `${p.uses_count} usos (ilimitado)`;
+  const usesBar = p.uses_limit > 0
+    ? `<div style="height:3px;background:var(--s3);border-radius:2px;margin-top:4px">
+         <div style="height:100%;width:${Math.round(p.uses_count/p.uses_limit*100)}%;background:var(--orange);border-radius:2px;transition:width .4s"></div>
+       </div>` : '';
+
+  return `<div class="panel" style="border:1px solid ${borderColor};position:relative;overflow:hidden">
+    ${isActive ? `<div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--orange),var(--yellow))"></div>` : ''}
+    <div style="padding:14px 16px">
+
+      <!-- Top row -->
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+          ${p.description ? `<div style="font-size:12px;color:var(--t2);margin-top:2px">${p.description}</div>` : ''}
+        </div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--orange);flex-shrink:0">${_discountLabel(p)}</div>
+      </div>
+
+      <!-- Status + countdown -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        ${_promoStatusBadge(p)}
+        ${p.code ? `<span class="badge" style="background:rgba(170,85,255,.1);color:#aa55ff;font-family:monospace;letter-spacing:1px">${p.code}</span>` : ''}
+        ${isActive ? `<span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--yellow)" id="cd-${p.id}">${_fmtCountdown(p.seconds_left)}</span>` : ''}
+      </div>
+
+      <!-- Details -->
+      <div style="font-size:11px;color:var(--t2);display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:10px">
+        <div>📅 ${p.start_date} ${p.start_time}</div>
+        <div>⏰ ${p.end_date} ${p.end_time}</div>
+        <div>📋 ${plans}</div>
+        <div>🔢 ${usesInfo}</div>
+      </div>
+      ${usesBar}
+
+      <!-- Actions -->
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn-s" style="flex:1" onclick="editPromo('${p.id}')">✏️ Editar</button>
+        <button class="btn-s" style="flex:1;color:var(--orange)"
+          onclick="togglePromo('${p.id}', ${!p.active})">${p.active ? '⏸ Pausar' : '▶ Activar'}</button>
+        <button class="btn-s" style="color:var(--red)"
+          onclick="deletePromo('${p.id}', '${p.name.replace(/'/g,'\\\'')}')"  >🗑</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// Render active-promo banners at top of other views (optional integration)
+function renderPromoBanners() {
+  const active = PROMOTIONS.filter(p => p.now_active);
+  const strip  = document.getElementById('promo-banners');
+  if (!strip) return;
+  if (!active.length) { strip.style.display = 'none'; return; }
+  strip.style.display = 'flex';
+  strip.innerHTML = active.map(p => `
+    <div style="background:linear-gradient(135deg,rgba(255,107,0,.15),rgba(255,209,102,.1));border:1px solid rgba(255,107,0,.3);border-radius:var(--r);padding:8px 14px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:18px">🏷️</span>
+      <div>
+        <div style="font-weight:700;font-size:13px">${p.name} — ${_discountLabel(p)}</div>
+        <div style="font-size:11px;color:var(--t2)">Vence: ${p.end_date} ${p.end_time}</div>
+      </div>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--yellow)" id="banner-cd-${p.id}">${_fmtCountdown(p.seconds_left)}</span>
+    </div>`).join('');
+}
+
+function updatePromoSidebarBadge() {
+  const badge  = document.getElementById('sb-promo-active');
+  const active = PROMOTIONS.filter(p => p.now_active).length;
+  if (badge) badge.style.display = active > 0 ? 'inline-block' : 'none';
+}
+
+// ── Modal CRUD — usa el overlay nativo del sistema ───────────
+function _promoFormHTML() {
+  const plansHtml = PLANS.map(pl => `
+    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;padding:5px 10px;background:var(--s2);border-radius:6px;border:1px solid var(--b1)">
+      <input type="checkbox" data-plan-id="${pl.id}" style="accent-color:var(--orange)"> ${pl.icon||''} ${pl.name}
+    </label>`).join('');
+
+  return `
+  <div class="fgrid">
+    <div class="fg full"><label>Nombre *</label>
+      <input id="pm-name" placeholder="Ej: Oferta Año Nuevo 30% OFF"></div>
+    <div class="fg full"><label>Descripción</label>
+      <input id="pm-desc" placeholder="Ej: Válida solo para nuevos miembros"></div>
+
+    <div class="fg"><label>Tipo de Descuento</label>
+      <select id="pm-type" onchange="updatePromoPreview()">
+        <option value="percent">Porcentaje (%)</option>
+        <option value="fixed">Monto Fijo (${CFG.currency})</option>
+      </select></div>
+    <div class="fg"><label>Valor</label>
+      <input id="pm-value" type="number" min="0" step="0.5" placeholder="Ej: 25" oninput="updatePromoPreview()"></div>
+
+    <div class="fg"><label>Fecha Inicio *</label>
+      <input id="pm-start-date" type="date"></div>
+    <div class="fg"><label>Fecha Fin *</label>
+      <input id="pm-end-date" type="date"></div>
+    <div class="fg"><label>Hora Inicio</label>
+      <input id="pm-start-time" type="time" value="00:00"></div>
+    <div class="fg"><label>Hora Fin</label>
+      <input id="pm-end-time" type="time" value="23:59"></div>
+
+    <div class="fg"><label>Código <span style="color:var(--t3);font-size:11px">(opcional)</span></label>
+      <input id="pm-code" placeholder="Ej: VERANO25"
+             oninput="this.value=this.value.toUpperCase()" style="text-transform:uppercase"></div>
+    <div class="fg"><label>Límite de Usos <span style="color:var(--t3);font-size:11px">(0=ilimitado)</span></label>
+      <input id="pm-limit" type="number" min="0" value="0"></div>
+
+    <div class="fg full"><label>Aplica a Planes <span style="color:var(--t3);font-size:11px">(vacío = todos)</span></label>
+      <div id="pm-plans-check" style="display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:var(--s2);border-radius:var(--r);border:1px solid var(--b1)">
+        ${plansHtml || '<span style="color:var(--t3);font-size:12px">No hay planes creados</span>'}
+      </div></div>
+
+    <div class="fg full" id="pm-preview" style="display:none;background:rgba(255,107,0,.08);border:1px solid rgba(255,107,0,.3);border-radius:var(--r);padding:12px">
+      <div style="font-size:11px;color:var(--orange);font-weight:700;margin-bottom:6px">VISTA PREVIA</div>
+      <div id="pm-preview-content" style="font-size:13px"></div>
+    </div>
+  </div>`;
+}
+
+async function openPromoModal(id = null) {
+  _editingPromoId = id;
+
+  // Build form HTML using the existing openModal() system
+  openModal(
+    id ? '✏️ Editar Promoción' : '🏷️ Nueva Promoción',
+    _promoFormHTML(),
+    [{ label: id ? 'Guardar Cambios' : 'Crear Promoción', fn: savePromo, cls: 'btn-p' }],
+    false
+  );
+
+  // Reset fields after DOM is ready
+  const today = new Date().toISOString().slice(0, 10);
+  document.getElementById('pm-start-date').value = today;
+  document.getElementById('pm-end-date').value   = today;
+  document.getElementById('pm-start-time').value = '00:00';
+  document.getElementById('pm-end-time').value   = '23:59';
+  document.getElementById('pm-limit').value      = '0';
+  document.getElementById('pm-preview').style.display = 'none';
+
+  if (id) {
+    const p = PROMOTIONS.find(x => x.id === id);
+    if (p) {
+      document.getElementById('pm-name').value       = p.name;
+      document.getElementById('pm-desc').value       = p.description || '';
+      document.getElementById('pm-code').value       = p.code || '';
+      document.getElementById('pm-type').value       = p.discount_type;
+      document.getElementById('pm-value').value      = p.discount_value;
+      document.getElementById('pm-start-date').value = p.start_date;
+      document.getElementById('pm-end-date').value   = p.end_date;
+      document.getElementById('pm-start-time').value = p.start_time;
+      document.getElementById('pm-end-time').value   = p.end_time;
+      document.getElementById('pm-limit').value      = p.uses_limit;
+      (p.applies_to || []).forEach(planId => {
+        const cb = document.querySelector(`#pm-plans-check [data-plan-id="${planId}"]`);
+        if (cb) cb.checked = true;
+      });
+      updatePromoPreview();
+    }
+  }
+}
+
+function closePromoModal() { closeModal(); _editingPromoId = null; }
+
+function editPromo(id) { openPromoModal(id); }
+
+async function togglePromo(id, active) {
+  try {
+    await PUT('/promotions/' + id, { active });
+    toast(active ? 'Promoción activada' : 'Promoción pausada', 'ok');
+    loadPromotions();
+  } catch(e) { toast('Error: ' + e.message, 'er'); }
+}
+
+async function deletePromo(id, name) {
+  if (!confirm(`¿Eliminar la promoción "${name}"?`)) return;
+  try {
+    await DEL('/promotions/' + id);
+    toast('Promoción eliminada', 'ok');
+    loadPromotions();
+  } catch(e) { toast('Error: ' + e.message, 'er'); }
+}
+
+// ── Wizard integration: auto-apply promo in membership step ───
+let _activeWizardPromo = null;   // promo seleccionada en el wizard
+
+async function loadWizardPromos(planId) {
+  _activeWizardPromo = null;
+  const container = document.getElementById('wiz-promo-container');
+  if (!container) return;
+
+  try {
+    const promos = await GET('/promotions/active?plan_id=' + planId);
+    if (!promos.length) {
+      container.innerHTML = '';
+      return;
+    }
+    container.innerHTML = `
+      <div style="background:rgba(255,107,0,.08);border:1px solid rgba(255,107,0,.25);border-radius:var(--r);padding:12px;margin-top:10px">
+        <div style="font-size:12px;font-weight:700;color:var(--orange);margin-bottom:8px">🏷️ PROMOCIONES DISPONIBLES</div>
+        ${promos.map(p => `
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+            <input type="radio" name="wiz-promo" value="${p.id}" onchange="applyWizardPromo('${p.id}')" style="accent-color:var(--orange)">
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:13px">${p.name}
+                <span style="color:var(--orange);margin-left:6px">${_discountLabel(p)}</span>
+              </div>
+              ${p.description ? `<div style="font-size:11px;color:var(--t2)">${p.description}</div>` : ''}
+              ${p.code ? `<div style="font-size:11px;color:#aa55ff;font-family:monospace">Código: ${p.code}</div>` : ''}
+            </div>
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--yellow)">${_fmtCountdown(p.seconds_left)}</span>
+          </label>`).join('')}
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 0;font-size:13px;color:var(--t2)">
+          <input type="radio" name="wiz-promo" value="" onchange="clearWizardPromo()" style="accent-color:var(--orange)"> Sin descuento
+        </label>
+      </div>`;
+  } catch { container.innerHTML = ''; }
+}
+
+async function applyWizardPromo(promoId) {
+  const planId = REG.planId;
+  if (!planId) return;
+  try {
+    const plan = PLANS.find(p => p.id === planId);
+    const promo = PROMOTIONS.find(p => p.id === promoId) ||
+                  (await GET('/promotions/active?plan_id=' + planId)).find(p => p.id === promoId);
+    if (!promo || !plan) return;
+
+    // Calculate discount locally (no uses_count increment yet — that happens on confirm)
+    const final   = promo.discount_type === 'percent'
+      ? plan.price * (1 - promo.discount_value / 100)
+      : Math.max(0, plan.price - promo.discount_value);
+    const saving  = plan.price - final;
+
+    _activeWizardPromo = { id: promoId, final_price: parseFloat(final.toFixed(2)), saving: parseFloat(saving.toFixed(2)), promo };
+
+    const amountEl = document.getElementById('reg-amount');
+    if (amountEl) amountEl.value = final.toFixed(2);
+
+    const infoEl = document.getElementById('wiz-promo-info');
+    if (infoEl) infoEl.innerHTML =
+      `<span style="color:var(--green)">✓ Ahorro: ${CFG.currency}${saving.toFixed(2)}</span>`;
+
+    toast(`Promo aplicada: ${promo.name} — ahorras ${CFG.currency}${saving.toFixed(2)}`, 'ok');
+  } catch(e) { toast('Error aplicando promo: ' + e.message, 'er'); }
+}
+
+function clearWizardPromo() {
+  _activeWizardPromo = null;
+  const plan = PLANS.find(p => p.id === REG.planId);
+  if (plan) {
+    const amountEl = document.getElementById('reg-amount');
+    if (amountEl) amountEl.value = plan.price;
+  }
+  const infoEl = document.getElementById('wiz-promo-info');
+  if (infoEl) infoEl.innerHTML = '';
+}
+
+// Called when user selects a plan in the wizard step 2
+function onWizPlanSelected(planId) {
+  REG.planId = planId;
+  const plan = PLANS.find(p => p.id === planId);
+  if (plan) {
+    const amountEl = document.getElementById('reg-amount');
+    if (amountEl) amountEl.value = plan.price;
+  }
+  loadWizardPromos(planId);
+}

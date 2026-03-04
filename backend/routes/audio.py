@@ -14,8 +14,7 @@ from ..database import get_db, AudioAnnouncement
 
 router = APIRouter(prefix="/api/audio-files", tags=["Audio"])
 
-AUDIO_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "audio")
-os.makedirs(AUDIO_DIR, exist_ok=True)
+from ..config import AUDIO_DIR
 
 ALLOWED_EXTENSIONS = {".mp3", ".wav", ".ogg", ".m4a"}
 MIME_TYPES = {
@@ -55,7 +54,7 @@ async def upload_audio(
 
     fid      = str(uuid.uuid4())
     filename = fid + ext
-    fpath    = os.path.join(AUDIO_DIR, filename)
+    fpath    = str(AUDIO_DIR / filename)
 
     content = await file.read()
     with open(fpath, "wb") as f:
@@ -85,7 +84,7 @@ def play_audio(fid: str, db: Session = Depends(get_db)):
     if not af:
         raise HTTPException(404, "Audio no encontrado")
 
-    fpath = os.path.join(AUDIO_DIR, af.filename)
+    fpath = str(AUDIO_DIR / af.filename)
     if not os.path.exists(fpath):
         raise HTTPException(404, "Archivo físico no encontrado")
 
@@ -97,7 +96,7 @@ def play_audio(fid: str, db: Session = Depends(get_db)):
 def delete_audio(fid: str, db: Session = Depends(get_db)):
     af = db.query(AudioAnnouncement).get(fid)
     if af:
-        fpath = os.path.join(AUDIO_DIR, af.filename)
+        fpath = str(AUDIO_DIR / af.filename)
         if os.path.exists(fpath):
             os.remove(fpath)
         db.delete(af)
