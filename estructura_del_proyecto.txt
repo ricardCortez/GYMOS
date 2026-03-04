@@ -1,18 +1,29 @@
 gymOS/
 ├── backend/
-│   ├── main.py              ← FastAPI + todos los endpoints
-│   ├── database.py          ← SQLAlchemy + SQLite
-│   ├── face_service.py      ← InsightFace wrapper
-│   └── routes/
-│       ├── members.py
-│       ├── memberships.py
-│       ├── attendance.py
-│       ├── payments.py
-│       ├── face.py          ← registro e identificación
-│       └── settings.py
-│       └── auth.py
+│   ├── main.py          → Inicializa FastAPI y registra rutas
+│   ├── auth.py          → Autenticación JWT + bcrypt
+│   ├── database.py      → Modelos y configuración SQLAlchemy
+│   ├── face_service.py  → Servicio de reconocimiento facial (InsightFace)
+│   ├── config.py        → Configuración general
+│   ├── routes/
+│   │   ├── admin_user.py
+│   │   ├── admin_users.py
+│   │   ├── plans.py
+│   │   ├── members.py
+│   │   ├── face.py
+│   │   ├── attendance.py
+│   │   ├── memberships.py
+│   │   ├── payments.py
+│   │   ├── announcements.py
+│   │   ├── settings.py
+│   │   ├── dashboard.py
+│   │   └── audio.py
+│
 ├── frontend/
-│   └── index.html           ← Tu UI conectada al backend
-├── data/                    ← gymOS.db se crea aquí
-├── requirements.txt
-└── run.py                   ← Arranca todo
+│   ├── index.html       → Estructura HTML + estilos
+│   └── app.js           → Lógica completa (SPA ligera)
+│
+├── data/                → Base de datos SQLite (gymOS.db)
+├── requirements.txt     → Dependencias
+├── run.py               → Punto de entrada del sistema
+└── README.md
