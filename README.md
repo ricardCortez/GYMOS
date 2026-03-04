@@ -21,19 +21,26 @@ python3 run.py
 ```
 gymOS/
 ├── backend/
-│   ├── main.py              ← FastAPI + todos los endpoints
-│   ├── database.py          ← SQLAlchemy + SQLite
-│   ├── face_service.py      ← InsightFace wrapper
-│   └── routes/
-│       ├── members.py
-│       ├── memberships.py
-│       ├── attendance.py
-│       ├── payments.py
-│       ├── face.py          ← registro e identificación
-│       └── settings.py
-│       └── auth.py
+    ├── main.py          →  84 líneas  (antes 500+)  solo inicializa
+    ├── auth.py          →  41 líneas  JWT + bcrypt
+    ├── database.py      → 230 líneas  modelos SQLAlchemy
+    ├── face_service.py  → 142 líneas  InsightFace
+    └── routes/
+        ├── __init__.py
+        ├── plans.py          →  72 líneas
+        ├── members.py        →  90 líneas
+        ├── face.py           → 107 líneas
+        ├── attendance.py     →  98 líneas
+        ├── memberships.py    → 107 líneas
+        ├── payments.py       →  48 líneas
+        ├── announcements.py  →  65 líneas
+        ├── settings.py       →  34 líneas
+        ├── dashboard.py      →  36 líneas
+        ├── admin_users.py    → 176 líneas  (auth + usuarios)
+        └── audio.py          → 105 líneas
 ├── frontend/
-│   └── index.html           ← Tu UI conectada al backend
+│   ├── index.html   ← Solo estructura HTML + CSS (58KB)
+    └── app.js       ← Toda la lógica (93KB)
 ├── data/                    ← gymOS.db se crea aquí
 ├── requirements.txt
 └── run.py                   ← Arranca todo
