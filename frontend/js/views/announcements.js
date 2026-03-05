@@ -41,8 +41,17 @@ function loadVoices() {
     }).join('');
   }
 }
-if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = loadVoices;
-setTimeout(loadVoices, 200);   // Chrome necesita un pequeño delay
+// Keep voices[] populated at all times (no DOM needed)
+// onvoiceschanged fires when browser loads voice list (especially Chrome)
+if (typeof speechSynthesis !== 'undefined') {
+  if (speechSynthesis.onvoiceschanged !== undefined) {
+    speechSynthesis.onvoiceschanged = function() { loadVoices(); };
+  }
+  // Initial load attempts — populates voices[] and _bestVoice
+  // #ann-voice select is only populated when the view is in the DOM (see loadAndRenderAnn)
+  setTimeout(function() { if (synth) loadVoices(); }, 100);
+  setTimeout(function() { if (synth) loadVoices(); }, 800);
+}
 
 // ── speak() genérico con parámetros ───────────────────────────
 function speak(text, opts = {}) {
@@ -147,6 +156,8 @@ async function loadAndRenderAnn() {
     if (ot) ot.value = cfg.openTime||'06:00';
     if (ct) ct.value = cfg.closeTime||'22:00';
   } catch {}
+  // Populate voice selector now that the view DOM is loaded
+  loadVoices();
 }
 
 function renderAnnList() {

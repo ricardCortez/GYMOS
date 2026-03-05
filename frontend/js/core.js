@@ -1,6 +1,4 @@
 // GymOS - core.js: globals, config, API helpers
-'use strict';
-
 // ── API URL dinámica ─────────────────────────────────────────
 const API = window.location.origin + '/api';
 
@@ -14,6 +12,9 @@ let CURRENT_USER = null;
 // ── Wizard de registro ───────────────────────────────────────
 let REG = { step: 0, memberId: null, planId: null };
 
+// ── Estado de cámara ─────────────────────────────────────────
+var camStream = null;   // stream activo de la cámara de asistencia
+
 // ── Caché local de datos ─────────────────────────────────────
 let MEMBERS      = [];
 let PLANS        = [];
@@ -23,6 +24,9 @@ let ANNS         = [];
 let AUDIO_FILES  = [];
 let PROMOTIONS   = [];
 let PROMO_TIMERS = {};
+
+// Control de cooldown de check-in facial
+let lastCheckins = Object.create(null);
 
 // ── Constantes ───────────────────────────────────────────────
 const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];

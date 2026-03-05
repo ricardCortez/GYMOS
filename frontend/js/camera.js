@@ -3,6 +3,7 @@
 // ══════════════════════════════════════════════════════════════
 
 let faceLoopTimer = null;
+var recognizing   = false;  // declared explicitly to avoid strict-mode ReferenceError
 
 // ── Utility: get camera stream with fallback constraints ───────
 async function getCameraStream(facingMode = 'user', width = 640, height = 480) {
@@ -23,6 +24,7 @@ async function getCameraStream(facingMode = 'user', width = 640, height = 480) {
 
 // ── Utility: attach stream to video element and wait for play ──
 function attachStream(videoEl, stream) {
+  if (!videoEl) return Promise.resolve();  // guard: view may not be in DOM
   return new Promise((resolve, reject) => {
     videoEl.srcObject = stream;
     videoEl.onloadedmetadata = () => {
@@ -75,8 +77,13 @@ function toggleCam() {
 async function startCam() {
   if (!checkCameraSupport()) return;
 
+  const vidEl = document.getElementById('cam-vid');
+  if (!vidEl) {
+    toast('Error: vista de cámara no cargada. Recarga la página.', 'er');
+    return;
+  }
+
   const btn        = document.getElementById('cam-btn');
-  const vidEl      = document.getElementById('cam-vid');
   const canvasEl   = document.getElementById('cam-cvs');
   const offEl      = document.getElementById('cam-off');
   const decoEl     = document.getElementById('cam-deco');
@@ -231,9 +238,11 @@ async function autoCheckin(memberId, confidence, memberName, daysLeft, membershi
       const fullName  = memberName || res.member_name || '';
       const firstName = fullName.split(' ')[0];
       if (document.getElementById('tog-welcome')?.checked) {
-        speakWelcome(firstName, null, daysLeft);
+        if (typeof speakWelcome === 'function') {
+          speakWelcome(firstName, null, daysLeft);
+        }
       }
-      renderTodayLog();
+      if (typeof renderTodayLog === 'function') renderTodayLog();
       toast(`✅ Check-in: ${memberName || res.member_name}`, 'ok');
     }
   } catch {}

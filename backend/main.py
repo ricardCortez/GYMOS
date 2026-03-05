@@ -76,7 +76,8 @@ def serve_css():
     )
 
 # Serve all frontend static files
-app.mount("/js",     StaticFiles(directory=os.path.join(FRONTEND_DIR, "js")),     name="js")
+app.mount("/js",    StaticFiles(directory=os.path.join(FRONTEND_DIR, "js")),    name="js")
+app.mount("/views", StaticFiles(directory=os.path.join(FRONTEND_DIR, "views")), name="views")
 app.mount("/assets", StaticFiles(directory=FRONTEND_DIR), name="static")
 
 @app.on_event("startup")

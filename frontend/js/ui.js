@@ -68,26 +68,83 @@ const VIEWS = {
   settings:      ['Configuración','Ajustes del sistema'],
 };
 
+
+// ── View cache & loader ──────────────────────────────────────
+const VIEW_CACHE = {};
+
+async function loadView(id) {
+  const content = document.getElementById('content');
+  if (!content) return;
+
+  // Already loaded — just show
+  if (VIEW_CACHE[id]) {
+    content.innerHTML = VIEW_CACHE[id];
+    return;
+  }
+
+  // Show spinner
+  content.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--t2)"><div class="loading"><div class="spin"></div>Cargando...</div></div>';
+
+  try {
+    const res = await fetch('/views/' + id + '.html?v=' + Date.now());
+    if (!res.ok) throw new Error(res.status);
+    const html = await res.text();
+    VIEW_CACHE[id] = html;
+    content.innerHTML = html;
+  } catch(e) {
+    content.innerHTML = '<div style="padding:40px;text-align:center;color:var(--red)">Error cargando vista: ' + e.message + '</div>';
+  }
+}
+
+
+// ── Sidebar toggle (mobile) ──────────────────────────────────
+function toggleSidebar() {
+  const sb  = document.getElementById('sb');
+  const bd  = document.getElementById('sb-backdrop');
+  const open = sb.classList.contains('sb-open');
+  if (open) { closeSidebar(); } else { openSidebar(); }
+}
+function openSidebar() {
+  document.getElementById('sb').classList.add('sb-open');
+  document.getElementById('sb-backdrop').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+  document.getElementById('sb').classList.remove('sb-open');
+  document.getElementById('sb-backdrop').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
 function nav(id) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  // Close sidebar on mobile when navigating
+  if (window.innerWidth <= 640) closeSidebar();
+  // Update sidebar active state
   document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
-  const vEl = document.getElementById('view-' + id);
-  if (vEl) vEl.classList.add('active');
   document.querySelectorAll('.sb-item[data-view="' + id + '"]').forEach(i => i.classList.add('active'));
+
+  // Update topbar title
   const [title, sub] = VIEWS[id] || [id, ''];
   document.getElementById('tb-title').textContent = title;
-  document.getElementById('tb-sub').textContent = sub;
-  // Load data
-  if (id === 'dashboard')   renderDashboard();
-  if (id === 'attendance')  { renderTodayLog(); if (camStream) {} }
-  if (id === 'members')     loadAndRenderMembers();
-  if (id === 'memberships') loadAndRenderMs();
-  if (id === 'payments')    loadAndRenderPay();
-  if (id === 'reports')     setTimeout(renderReports, 120);
-  if (id === 'announcements') loadAndRenderAnn();
-  if (id === 'promotions')   loadPromotions();
-  if (id === 'settings')    loadSettings();
-  if (id === 'register')    initRegWizard();
+  document.getElementById('tb-sub').textContent   = sub;
+
+  // Load view HTML then trigger data load
+  loadView(id).then(() => {
+    // Reset scroll
+    const content = document.getElementById('content');
+    if (content) content.scrollTop = 0;
+    // Trigger data load
+    if (id === 'dashboard')     renderDashboard();
+    if (id === 'attendance')    renderTodayLog();
+    if (id === 'members')       loadAndRenderMembers();
+    if (id === 'memberships')   loadAndRenderMs();
+    if (id === 'payments')      loadAndRenderPay();
+    if (id === 'reports')       setTimeout(renderReports, 120);
+    if (id === 'announcements') loadAndRenderAnn();
+    if (id === 'promotions')    loadPromotions();
+    if (id === 'settings')      loadSettings();
+    if (id === 'register')      initRegWizard();
+    if (id === 'profiles')      loadAndRenderProfiles();
+  });
 }
 
 document.querySelectorAll('.sb-item[data-view]').forEach(el =>
@@ -119,9 +176,16 @@ document.getElementById('overlay').addEventListener('click', e => {
 //  TOAST
 // ══════════════════════════════════════════════════════════════
 function toast(msg, type='in', dur=3500) {
-  const t = document.getElementById('toast');
+  let t = document.getElementById('toast');
+  // If toast container not found, create it
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    document.body.appendChild(t);
+  }
   const el = document.createElement('div');
-  el.className = 'ti ' + type; el.textContent = msg;
+  el.className = 'ti ' + type;
+  el.textContent = msg;
   t.appendChild(el);
   setTimeout(() => { el.style.opacity='0'; el.style.transition='.3s'; setTimeout(()=>el.remove(),300); }, dur);
 }

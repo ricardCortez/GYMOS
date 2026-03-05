@@ -19,7 +19,7 @@ async function boot() {
       ANNS    = await GET('/announcements');
 
       await checkFaceStatus();
-      renderDashboard();
+      nav('dashboard');
       toast('✅ GymOS conectado al servidor','ok');
     } catch(e) { toast('Error inicial: '+e.message,'er'); }
   } else {
