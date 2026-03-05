@@ -43,7 +43,6 @@ async function checkFaceStatus() {
 //  CLOCK
 // ══════════════════════════════════════════════════════════════
 const DAYS  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-const MONTHS= ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 function tick() {
   const n = new Date();
   document.getElementById('sb-clock').textContent =

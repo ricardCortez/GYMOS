@@ -1,7 +1,6 @@
 // ══════════════════════════════════════════════════════════════
 //  AUDIO FILES
 // ══════════════════════════════════════════════════════════════
-let AUDIO_FILES = [];
 let currentAudio = null;
 
 async function loadAudioFiles() {

@@ -2,7 +2,6 @@
 //  CAMERA SYSTEM (rewritten for Windows compatibility)
 // ══════════════════════════════════════════════════════════════
 
-let camStream = null, recognizing = false, lastCheckins = {};
 let faceLoopTimer = null;
 
 // ── Utility: get camera stream with fallback constraints ───────
@@ -522,12 +521,14 @@ function toggleQFAuto() {
   }
 }
 
-// override closeModal to also stop QF cam
-const _baseCloseModal = closeModal;
-closeModal = function() {
-  stopQFCam();
-  _baseCloseModal();
-};
+// override closeModal to also stop QF cam — deferred until all scripts loaded
+window.addEventListener('load', function() {
+  const _baseCloseModal = closeModal;
+  window.closeModal = function() {
+    stopQFCam();
+    _baseCloseModal();
+  };
+});
 
 // ══ REGISTRATION PHOTO (for member profile pic) ═══════════════
 async function capRegPhoto() {

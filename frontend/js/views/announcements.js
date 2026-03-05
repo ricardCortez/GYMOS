@@ -1,9 +1,6 @@
 // ══════════════════════════════════════════════════════════════
 //  ANNOUNCEMENTS
 // ══════════════════════════════════════════════════════════════
-let synth = window.speechSynthesis;
-let voices = [];
-let _bestVoice = null;   // voz más natural detectada automáticamente
 
 // ── Ranking de voces: prefiere voces neurales/online ──────────
 function _rankVoice(v) {

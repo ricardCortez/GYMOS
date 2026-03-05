@@ -1,8 +1,6 @@
 // ══════════════════════════════════════════════════════════════
 //  AUTH
 // ══════════════════════════════════════════════════════════════
-let AUTH_TOKEN = sessionStorage.getItem('gymos_token') || '';
-let CURRENT_USER = null;
 
 const ROLE_NAMES = {
   superadmin:  '★ Superadmin',
@@ -25,13 +23,7 @@ function canAccess(view) {
 }
 
 // Override original api() to always inject Authorization header
-const _originalFetch = window.fetch.bind(window);
-window.fetch = function(url, opts = {}) {
-  if (AUTH_TOKEN && typeof url === 'string' && url.includes('/api/')) {
-    opts.headers = { ...(opts.headers||{}), 'Authorization': 'Bearer ' + AUTH_TOKEN };
-  }
-  return _originalFetch(url, opts);
-};
+
 
 async function doLogin() {
   const user = document.getElementById('l-user').value.trim();

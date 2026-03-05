@@ -51,3 +51,6 @@ const GET  = p       => api(p);
 const POST = (p, b)  => api(p, { method: 'POST',   body: b });
 const PUT  = (p, b)  => api(p, { method: 'PUT',    body: b });
 const DEL  = p       => api(p, { method: 'DELETE' });
+let synth   = window.speechSynthesis;
+let voices  = [];
+let _bestVoice = null;
