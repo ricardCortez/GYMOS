@@ -377,9 +377,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 }
 #sb-toggle:hover { background: var(--s3); }
 
-/* ── Topbar pills: hide on small screens ─────────────────────── */
-.tb-pill-hide-sm { }   /* marker class */
-
 /* ── Tables: make them scroll horizontally on mobile ──────────── */
 .tbl-wrap {
   overflow-x: auto;
