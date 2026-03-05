@@ -1,79 +1,139 @@
-<div style="max-width:min(680px,100%)">
-        <div class="panel" style="margin-bottom:14px">
-          <div class="ph"><span class="ph-title">🏋 Información del Gimnasio</span></div>
-          <div class="pb">
-            <div class="fgrid">
-              <div class="fg"><label>Nombre del Gimnasio</label><input id="set-name" placeholder="Mi Gimnasio"></div>
-              <div class="fg"><label>Teléfono</label><input id="set-phone" placeholder="+51 999 999 999"></div>
-              <div class="fg full"><label>Dirección</label><input id="set-addr" placeholder="Calle, distrito, ciudad"></div>
-              <div class="fg"><label>Moneda</label>
-                <select id="set-currency"><option value="S/">S/ Sol</option><option value="$">$ Dólar</option><option value="€">€ Euro</option><option value="MXN">MXN Peso MX</option><option value="COP">COP Peso CO</option></select>
-              </div>
-              <div class="fg"><label>Zona Horaria</label>
-                <select id="set-tz"><option value="-5">GMT-5 Lima/Bogotá</option><option value="-6">GMT-6 CDMX</option><option value="-3">GMT-3 Bs. Aires</option><option value="0">GMT+0 Madrid</option></select>
-              </div>
-            </div>
-            <button class="btn-p" style="margin-top:14px" onclick="saveSettings()">💾 Guardar</button>
-          </div>
+<div style="max-width:min(720px,100%)">
+
+  <!-- ═══ Información del Gimnasio ═══════════════════════════ -->
+  <div class="panel" style="margin-bottom:14px">
+    <div class="ph"><span class="ph-title">🏋 Información del Gimnasio</span></div>
+    <div class="pb">
+      <div class="fgrid">
+        <div class="fg"><label>Nombre del Gimnasio</label><input id="set-name" placeholder="Mi Gimnasio"></div>
+        <div class="fg"><label>Teléfono</label><input id="set-phone" placeholder="+51 999 999 999"></div>
+        <div class="fg full"><label>Dirección</label><input id="set-addr" placeholder="Calle, distrito, ciudad"></div>
+        <div class="fg"><label>Moneda</label>
+          <select id="set-currency">
+            <option value="S/">S/ Sol</option><option value="$">$ Dólar</option>
+            <option value="€">€ Euro</option><option value="MXN">MXN Peso MX</option><option value="COP">COP Peso CO</option>
+          </select>
         </div>
-        <div class="panel" style="margin-bottom:14px">
-          <div class="ph"><span class="ph-title">🔐 Reconocimiento Facial</span></div>
-          <div class="pb">
-            <div class="set-row">
-              <div class="set-info"><div class="set-name">Umbral de reconocimiento</div><div class="set-desc">Menor = más estricto. Recomendado: 0.45</div></div>
-              <div style="display:flex;align-items:center;gap:10px">
-                <input type="range" id="set-thresh" min="0.3" max="0.65" step="0.05" value="0.45" oninput="document.getElementById('thresh-val').textContent=this.value" style="width:100px">
-                <span id="thresh-val" style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;min-width:34px">0.45</span>
-              </div>
-            </div>
-            <div class="set-row">
-              <div class="set-info"><div class="set-name">Cooldown entre check-ins</div><div class="set-desc">Tiempo mínimo entre registros del mismo miembro</div></div>
-              <select id="set-cooldown" style="background:var(--s2);border:1px solid var(--b1);color:var(--text);border-radius:var(--r);padding:6px 10px;font-size:13px">
-                <option value="300">5 min</option><option value="1800">30 min</option><option value="3600" selected>1 hora</option><option value="14400">4 horas</option><option value="86400">1 día</option>
-              </select>
-            </div>
-            <button class="btn-s" style="width:100%;margin-top:12px" onclick="saveSettings()">Guardar Configuración</button>
-          </div>
-        </div>
-        <div class="panel">
-          <div class="ph"><span class="ph-title">🗄 Datos del Sistema</span></div>
-          <div class="pb">
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn-s" onclick="exportDB()">📤 Exportar</button>
-              <button class="btn-s" onclick="importDB()">📥 Importar</button>
-            </div>
-            <input type="file" id="import-file" accept=".json" style="display:none" onchange="doImport(this)">
-          </div>
+        <div class="fg"><label>Zona Horaria</label>
+          <select id="set-tz">
+            <option value="-5">GMT-5 Lima/Bogotá</option><option value="-6">GMT-6 CDMX</option>
+            <option value="-3">GMT-3 Bs. Aires</option><option value="0">GMT+0 Madrid</option>
+          </select>
         </div>
       </div>
+      <button class="btn-p" style="margin-top:14px" onclick="saveSettings()">💾 Guardar</button>
     </div>
-
-
-    <!-- ═══ PROFILES ══════════════════════════════ -->
-    <div id="view-profiles" class="view">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-        <div>
-          <div style="font-size:22px;font-weight:800">👥 Usuarios del Sistema</div>
-          <div style="font-size:12px;color:var(--t2);margin-top:2px">Gestiona los accesos y roles del equipo GymOS</div>
-        </div>
-        <button class="btn-p" id="add-profile-btn" onclick="openProfileModal()">✚ Nuevo Usuario</button>
-      </div>
-      <div class="profile-grid" id="profile-grid">
-        <div style="grid-column:1/-1;padding:20px;text-align:center;color:var(--t2)">Cargando usuarios...</div>
-      </div>
-    </div>
-
-  </div><!-- /content -->
-</div><!-- /main -->
-
-<!-- MODAL -->
-<div id="overlay">
-  <div class="modal" id="modal-box">
-    <div class="mh"><span class="mh-title" id="modal-title">-</span><button class="xbtn" onclick="closeModal()">✕</button></div>
-    <div class="mb" id="modal-body"></div>
-    <div class="mf" id="modal-foot"></div>
   </div>
-</div>
 
-<!-- TOAST -->
-<div id="toast">
+  <!-- ═══ Reconocimiento Facial ══════════════════════════════ -->
+  <div class="panel" style="margin-bottom:14px">
+    <div class="ph"><span class="ph-title">🔐 Reconocimiento Facial</span></div>
+    <div class="pb">
+      <div class="set-row">
+        <div class="set-info"><div class="set-name">Umbral de reconocimiento</div><div class="set-desc">Menor = más estricto. Recomendado: 0.45</div></div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="range" id="set-thresh" min="0.3" max="0.65" step="0.05" value="0.45"
+            oninput="document.getElementById('thresh-val').textContent=this.value" style="width:100px">
+          <span id="thresh-val" style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;min-width:34px">0.45</span>
+        </div>
+      </div>
+      <div class="set-row">
+        <div class="set-info"><div class="set-name">Cooldown entre check-ins</div><div class="set-desc">Tiempo mínimo entre registros del mismo miembro</div></div>
+        <select id="set-cooldown" style="background:var(--s2);border:1px solid var(--b1);color:var(--text);border-radius:var(--r);padding:6px 10px;font-size:13px">
+          <option value="300">5 min</option><option value="1800">30 min</option>
+          <option value="3600" selected>1 hora</option><option value="14400">4 horas</option><option value="86400">1 día</option>
+        </select>
+      </div>
+      <button class="btn-s" style="width:100%;margin-top:12px" onclick="saveSettings()">Guardar Configuración</button>
+    </div>
+  </div>
+
+  <!-- ═══ Exportar datos (Admin+) ════════════════════════════ -->
+  <div class="panel" style="margin-bottom:14px" id="panel-export">
+    <div class="ph"><span class="ph-title">📤 Exportar Datos</span></div>
+    <div class="pb">
+      <p style="font-size:13px;color:var(--t2);margin-bottom:14px">
+        Descarga los datos del gimnasio en formato CSV compatible con Excel y Google Sheets.
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn-p" onclick="exportMembers()">
+          👥 Exportar Miembros
+        </button>
+        <button class="btn-p" onclick="exportReport()">
+          📊 Exportar Reporte Completo
+        </button>
+        <button class="btn-s" onclick="exportDB()">
+          🗄 Backup JSON
+        </button>
+      </div>
+      <div style="margin-top:12px;padding:10px 12px;background:var(--s2);border-radius:var(--r);font-size:12px;color:var(--t2)">
+        <b style="color:var(--text)">Exportar Miembros</b> — nombre, email, teléfono, DNI, fecha registro, facial<br>
+        <b style="color:var(--text)">Reporte Completo</b> — resumen + asistencia 90 días + historial de pagos<br>
+        <b style="color:var(--text)">Backup JSON</b> — copia completa para restaurar en otro servidor
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Importar / Restaurar ═══════════════════════════════ -->
+  <div class="panel" style="margin-bottom:14px">
+    <div class="ph"><span class="ph-title">📥 Importar / Restaurar</span></div>
+    <div class="pb">
+      <p style="font-size:13px;color:var(--t2);margin-bottom:12px">Restaura datos desde un backup JSON generado por GymOS.</p>
+      <button class="btn-s" onclick="importDB()">📂 Seleccionar archivo JSON</button>
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="doImport(this)">
+    </div>
+  </div>
+
+  <!-- ═══ Zona de Peligro — solo Superadmin ══════════════════ -->
+  <div class="panel" id="panel-danger" style="display:none;border-color:rgba(255,45,85,.3)">
+    <div class="ph" style="border-bottom-color:rgba(255,45,85,.2)">
+      <span class="ph-title" style="color:var(--red)">⚠️ Zona de Peligro — Superadmin</span>
+    </div>
+    <div class="pb">
+      <p style="font-size:13px;color:var(--t2);margin-bottom:16px">
+        Estas acciones son <b style="color:var(--red)">permanentes e irreversibles</b>. 
+        Se recomienda hacer un backup JSON antes de continuar.
+      </p>
+      <div style="display:grid;gap:10px">
+
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(255,45,85,.05);border:1px solid rgba(255,45,85,.15);border-radius:var(--r)">
+          <div>
+            <div style="font-size:14px;font-weight:700">Limpiar Asistencia</div>
+            <div style="font-size:12px;color:var(--t2)">Elimina todos los registros de check-in del historial</div>
+          </div>
+          <button class="btn-s" style="color:var(--red);border-color:rgba(255,45,85,.4);flex-shrink:0"
+            onclick="clearData('attendance')">🗑 Limpiar</button>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(255,45,85,.05);border:1px solid rgba(255,45,85,.15);border-radius:var(--r)">
+          <div>
+            <div style="font-size:14px;font-weight:700">Limpiar Pagos</div>
+            <div style="font-size:12px;color:var(--t2)">Elimina todo el historial de pagos y transacciones</div>
+          </div>
+          <button class="btn-s" style="color:var(--red);border-color:rgba(255,45,85,.4);flex-shrink:0"
+            onclick="clearData('payments')">🗑 Limpiar</button>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(255,45,85,.05);border:1px solid rgba(255,45,85,.15);border-radius:var(--r)">
+          <div>
+            <div style="font-size:14px;font-weight:700">Limpiar Membresías</div>
+            <div style="font-size:12px;color:var(--t2)">Elimina todas las membresías activas e inactivas</div>
+          </div>
+          <button class="btn-s" style="color:var(--red);border-color:rgba(255,45,85,.4);flex-shrink:0"
+            onclick="clearData('memberships')">🗑 Limpiar</button>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:rgba(255,45,85,.08);border:2px solid rgba(255,45,85,.35);border-radius:var(--r)">
+          <div>
+            <div style="font-size:15px;font-weight:800;color:var(--red)">🔥 Resetear Base de Datos</div>
+            <div style="font-size:12px;color:var(--t2);margin-top:2px">Elimina miembros, asistencia, pagos y membresías. Mantiene usuarios admin y planes.</div>
+          </div>
+          <button class="btn-s" style="color:var(--red);border-color:var(--red);font-weight:800;flex-shrink:0"
+            onclick="clearData('all')">💣 RESET</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>

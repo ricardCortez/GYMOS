@@ -141,6 +141,14 @@ if __name__ == "__main__":
             ssl_certfile=ssl_certfile,
             ssl_keyfile=ssl_keyfile,
         )
-    except ImportError:
-        print("ERROR: Ejecuta primero: pip install -r requirements.txt")
+    except ImportError as _ie:
+        import traceback
+        traceback.print_exc()
+        print(f"\nERROR de importación: {_ie}")
+        print("Verifica que todos los módulos estén instalados: pip install -r requirements.txt")
+        sys.exit(1)
+    except Exception as _e:
+        import traceback
+        traceback.print_exc()
+        print(f"\nERROR al iniciar: {_e}")
         sys.exit(1)

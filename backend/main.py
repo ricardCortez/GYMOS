@@ -26,6 +26,7 @@ from .routes.announcements import router as announcements_router
 from .routes.settings      import router as settings_router
 from .routes.dashboard     import router as dashboard_router
 from .routes.admin_users   import router as admin_router
+from .routes.tools         import router as tools_router
 from .routes.audio         import router as audio_router
 from .routes.promotions    import router as promotions_router
 
@@ -52,6 +53,7 @@ app.include_router(announcements_router)
 app.include_router(settings_router)
 app.include_router(dashboard_router)
 app.include_router(admin_router)
+app.include_router(tools_router)
 app.include_router(audio_router)
 app.include_router(promotions_router)
 

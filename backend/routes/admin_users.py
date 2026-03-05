@@ -10,6 +10,7 @@ DELETE /api/admin-users/{uid}
 """
 from fastapi import APIRouter, Depends, HTTPException, Body, Header
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from pydantic import BaseModel
 from datetime import datetime
 import uuid
@@ -160,17 +161,38 @@ def update_admin_user(
     return _user(u)
 
 
+@router.patch("/api/admin-users/{uid}/toggle")
+def toggle_admin_user(
+    uid: str,
+    db: Session = Depends(get_db),
+    current_user: AdminUser = Depends(require_role("superadmin")),
+):
+    """Activar o desactivar un usuario sin eliminarlo."""
+    u = db.query(AdminUser).get(uid)
+    if not u:
+        raise HTTPException(404, "Usuario no encontrado")
+    if u.id == current_user.id:
+        raise HTTPException(400, "No puedes desactivarte a ti mismo")
+    u.active = not u.active
+    db.commit()
+    return _user(u)
+
+
 @router.delete("/api/admin-users/{uid}")
 def delete_admin_user(
     uid: str,
     db: Session = Depends(get_db),
     current_user: AdminUser = Depends(require_role("superadmin")),
 ):
-    u = db.query(AdminUser).get(uid)
-    if not u:
-        raise HTTPException(404, "Usuario no encontrado")
-    if u.id == current_user.id:
+    """Eliminar permanentemente un usuario del sistema (SQL directo)."""
+    if uid == current_user.id:
         raise HTTPException(400, "No puedes eliminarte a ti mismo")
-    u.active = False
+    # Raw SQL to guarantee physical deletion regardless of ORM cache
+    result = db.execute(
+        text("DELETE FROM admin_users WHERE id = :uid"),
+        {"uid": uid}
+    )
     db.commit()
-    return {"ok": True}
+    if result.rowcount == 0:
+        raise HTTPException(404, "Usuario no encontrado")
+    return {"ok": True, "deleted": uid}

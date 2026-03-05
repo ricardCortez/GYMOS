@@ -1,52 +1,125 @@
 // ══════════════════════════════════════════════════════════════
 //  SETTINGS
 // ══════════════════════════════════════════════════════════════
+
 async function loadSettings() {
   try {
     const s = await GET('/settings');
-    CFG = { ...CFG, currency: s.currency||'S/', gymName: s.gymName||'GymOS', faceThreshold: parseFloat(s.faceThreshold)||0.45, checkinCooldown: parseInt(s.checkinCooldown)||3600 };
-    document.getElementById('set-name').value  = s.gymName||'';
-    document.getElementById('set-phone').value = s.phone||'';
-    document.getElementById('set-addr').value  = s.address||'';
-    document.getElementById('set-currency').value = s.currency||'S/';
-    document.getElementById('set-tz').value    = s.timezone||'-5';
-    document.getElementById('set-thresh').value = s.faceThreshold||0.45;
-    document.getElementById('thresh-val').textContent = s.faceThreshold||0.45;
-    document.getElementById('set-cooldown').value = s.checkinCooldown||3600;
-    document.getElementById('gym-av').textContent = (s.gymName||'G')[0].toUpperCase();
-  } catch {}
+    CFG = {
+      ...CFG,
+      currency:       s.currency      || 'S/',
+      gymName:        s.gymName       || 'GymOS',
+      faceThreshold:  parseFloat(s.faceThreshold)  || 0.45,
+      checkinCooldown:parseInt(s.checkinCooldown)  || 3600,
+    };
+    document.getElementById('set-name').value     = s.gymName  || '';
+    document.getElementById('set-phone').value    = s.phone    || '';
+    document.getElementById('set-addr').value     = s.address  || '';
+    document.getElementById('set-currency').value = s.currency || 'S/';
+    document.getElementById('set-tz').value       = s.timezone || '-5';
+    document.getElementById('set-thresh').value   = s.faceThreshold || 0.45;
+    document.getElementById('thresh-val').textContent = s.faceThreshold || 0.45;
+    document.getElementById('set-cooldown').value = s.checkinCooldown || 3600;
+    document.getElementById('gym-av').textContent = (s.gymName || 'G')[0].toUpperCase();
+  } catch(e) { toast('Error cargando configuración: ' + e.message, 'er'); }
+
+  // Show danger zone only for superadmin
+  const danger  = document.getElementById('panel-danger');
+  if (danger) danger.style.display = CURRENT_USER?.role === 'superadmin' ? '' : 'none';
+
+  // Export panel visible for admin+
+  const expPanel = document.getElementById('panel-export');
+  const canExport = ['superadmin','admin','recepcion'].includes(CURRENT_USER?.role);
+  if (expPanel) expPanel.style.display = canExport ? '' : 'none';
 }
 
 async function saveSettings() {
   const data = {
-    gymName: document.getElementById('set-name').value,
-    phone:   document.getElementById('set-phone').value,
-    address: document.getElementById('set-addr').value,
-    currency:document.getElementById('set-currency').value,
-    timezone:document.getElementById('set-tz').value,
-    faceThreshold: document.getElementById('set-thresh').value,
+    gymName:         document.getElementById('set-name').value,
+    phone:           document.getElementById('set-phone').value,
+    address:         document.getElementById('set-addr').value,
+    currency:        document.getElementById('set-currency').value,
+    timezone:        document.getElementById('set-tz').value,
+    faceThreshold:   document.getElementById('set-thresh').value,
     checkinCooldown: document.getElementById('set-cooldown').value,
-    togWelcome: document.getElementById('tog-welcome')?.checked ? 'true' : 'false',
-    togRenew:   document.getElementById('tog-renew')?.checked   ? 'true' : 'false',
-    togOpen:    document.getElementById('tog-open')?.checked    ? 'true' : 'false',
-    togClose:   document.getElementById('tog-close')?.checked   ? 'true' : 'false',
   };
   await PUT('/settings', data);
   CFG.currency = data.currency;
-  document.getElementById('gym-av').textContent = (data.gymName||'G')[0].toUpperCase();
-  toast('✅ Configuración guardada','ok');
+  CFG.gymName  = data.gymName;
+  document.getElementById('gym-av').textContent = (data.gymName || 'G')[0].toUpperCase();
+  toast('✅ Configuración guardada', 'ok');
 }
 
-function exportDB() { window.open(window.location.origin + '/api/export','_blank'); }
-function importDB() { document.getElementById('import-file').click(); }
+// ── Exportar ──────────────────────────────────────────────────
+
+function exportMembers() {
+  const a = document.createElement('a');
+  a.href = window.location.origin + '/api/tools/export-members';
+  a.download = '';
+  a.click();
+  toast('📥 Descargando miembros...', 'in');
+}
+
+function exportReport() {
+  const a = document.createElement('a');
+  a.href = window.location.origin + '/api/tools/export-report';
+  a.download = '';
+  a.click();
+  toast('📥 Descargando reporte...', 'in');
+}
+
+function exportDB() {
+  window.open(window.location.origin + '/api/export', '_blank');
+}
+
+function importDB() {
+  document.getElementById('import-file').click();
+}
+
 async function doImport(input) {
-  const file = input.files[0]; if(!file) return;
+  const file = input.files[0];
+  if (!file) return;
   const r = new FileReader();
   r.onload = async e => {
     try {
       await POST('/import', JSON.parse(e.target.result));
-      toast('Datos importados ✓','ok');
-    } catch(e2) { toast('Error importando: '+e2.message,'er'); }
+      toast('Datos importados ✓', 'ok');
+    } catch(e2) { toast('Error importando: ' + e2.message, 'er'); }
   };
   r.readAsText(file);
+}
+
+// ── Limpiar datos (superadmin) ────────────────────────────────
+
+const CLEAR_LABELS = {
+  attendance:  { label: 'asistencia',             warn: '¿Eliminar TODOS los registros de asistencia?\n\nEsta acción es irreversible.' },
+  payments:    { label: 'pagos',                   warn: '¿Eliminar TODO el historial de pagos?\n\nEsta acción es irreversible.' },
+  memberships: { label: 'membresías',              warn: '¿Eliminar TODAS las membresías?\n\nEsta acción es irreversible.' },
+  all:         { label: 'base de datos completa',  warn: '⚠️ RESETEAR BASE DE DATOS COMPLETA\n\nEsto eliminará:\n• Todos los miembros\n• Toda la asistencia\n• Todos los pagos\n• Todas las membresías\n\nSe mantendrán: usuarios admin y planes.\n\nEscribe RESET para confirmar:' },
+};
+
+async function clearData(type) {
+  const cfg = CLEAR_LABELS[type];
+  if (!cfg) return;
+
+  if (type === 'all') {
+    const input = prompt(cfg.warn);
+    if (input !== 'RESET') {
+      toast('Cancelado — debes escribir RESET exactamente', 'wa');
+      return;
+    }
+  } else {
+    if (!confirm(cfg.warn)) return;
+  }
+
+  const endpoint = '/tools/clear-' + (type === 'all' ? 'all' : type);
+  try {
+    const result = await api(endpoint, { method: 'POST' });
+    const count  = type === 'all'
+      ? Object.values(result.cleared || {}).reduce((a, b) => a + b, 0)
+      : (result.deleted || 0);
+    toast('✓ ' + count + ' registros de ' + cfg.label + ' eliminados', 'ok');
+    // Refresh local caches
+    if (type === 'all' || type === 'attendance') { /* attendance view will reload */ }
+  } catch(e) { toast('Error: ' + e.message, 'er'); }
 }
