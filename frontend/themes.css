@@ -1,0 +1,119 @@
+/*
+ * GymOS - Temas de interfaz
+ * Aplicar con: document.documentElement.setAttribute('data-theme', 'arctic')
+ * Temas disponibles: infrared (default) | arctic | violet | jade | slate | aurora
+ */
+
+/* ══════════════════════════════════════════════════════
+   INFRARED (Default) — ya definido en :root de style.css
+   Negro profundo · Naranja lava · Energía industrial
+══════════════════════════════════════════════════════ */
+[data-theme="infrared"] {
+  --bg:#060810; --s1:#0c0d1a; --s2:#111325; --s3:#181a2e; --s4:#1f2240;
+  --b1:#232547; --b2:#2e3160; --b3:#3d4080;
+  --text:#dde0ff; --t2:#8890c0; --t3:#4a5080;
+  --acc:#ff6b00; --acc2:#00d4ff;
+  --green:#00e5a0; --red:#ff2d55; --yellow:#ffcc00;
+  --font:'DM Sans',sans-serif;
+}
+
+/* ══════════════════════════════════════════════════════
+   ARCTIC — Blanco · Azul eléctrico · Profesional SaaS
+══════════════════════════════════════════════════════ */
+[data-theme="arctic"] {
+  --bg:#f0f4f8; --s1:#ffffff; --s2:#f8fafc; --s3:#f1f5f9; --s4:#e8edf5;
+  --b1:#e2e8f0; --b2:#cbd5e1; --b3:#94a3b8;
+  --text:#0f172a; --t2:#64748b; --t3:#94a3b8;
+  --acc:#2563eb; --acc2:#0891b2;
+  --green:#16a34a; --red:#dc2626; --yellow:#d97706;
+  --font:'Inter',sans-serif;
+  /* Overrides for light theme */
+  color-scheme: light;
+}
+[data-theme="arctic"] .modal { box-shadow: 0 20px 60px rgba(0,0,0,.15); }
+[data-theme="arctic"] #overlay { background: rgba(15,23,42,.5); }
+[data-theme="arctic"] .user-menu-drop { box-shadow: 0 12px 40px rgba(0,0,0,.15); }
+[data-theme="arctic"] .tb-pill { background: var(--s2); }
+[data-theme="arctic"] .sb-logo-mark { box-shadow: 0 4px 12px color-mix(in srgb, var(--acc) 30%, transparent); }
+[data-theme="arctic"] .kpi { box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+[data-theme="arctic"] .panel { box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+[data-theme="arctic"] .mc:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+[data-theme="arctic"] .login-box { box-shadow: 0 24px 80px rgba(0,0,0,.12); }
+[data-theme="arctic"] .login-bg-glow { background: radial-gradient(circle, color-mix(in srgb, var(--acc) 10%, transparent) 0%, transparent 70%); }
+[data-theme="arctic"] ::-webkit-scrollbar-thumb { background: var(--b2); }
+[data-theme="arctic"] .btn-p:hover { box-shadow: 0 4px 16px color-mix(in srgb, var(--acc) 30%, transparent); }
+[data-theme="arctic"] .tbl tr:hover td { background: var(--s2); }
+[data-theme="arctic"] #toast .ti { box-shadow: 0 4px 20px rgba(0,0,0,.1); }
+
+/* ══════════════════════════════════════════════════════
+   VIOLET DUSK — Negro · Violeta/Índigo · Dark premium
+══════════════════════════════════════════════════════ */
+[data-theme="violet"] {
+  --bg:#0f0f14; --s1:#17171f; --s2:#1e1e28; --s3:#252530; --s4:#2e2e3d;
+  --b1:rgba(255,255,255,.07); --b2:rgba(255,255,255,.12); --b3:rgba(255,255,255,.22);
+  --text:#f1f0ff; --t2:#8b85b0; --t3:#4a4570;
+  --acc:#7c3aed; --acc2:#c026d3;
+  --green:#4ade80; --red:#f87171; --yellow:#fbbf24;
+  --font:'Plus Jakarta Sans',sans-serif;
+  color-scheme: dark;
+}
+[data-theme="violet"] .sb-logo-mark { box-shadow: 0 0 20px color-mix(in srgb, var(--acc) 35%, transparent); }
+[data-theme="violet"] .dot-green { box-shadow: 0 0 8px var(--green); }
+
+/* ══════════════════════════════════════════════════════
+   JADE — Blanco/menta · Verde esmeralda · Wellness
+══════════════════════════════════════════════════════ */
+[data-theme="jade"] {
+  --bg:#f0faf5; --s1:#ffffff; --s2:#f4fbf7; --s3:#e6f7ee; --s4:#d1fae5;
+  --b1:#d1fae5; --b2:#a7f3d0; --b3:#6ee7b7;
+  --text:#064e3b; --t2:#6b7280; --t3:#9ca3af;
+  --acc:#059669; --acc2:#0891b2;
+  --green:#059669; --red:#ef4444; --yellow:#f59e0b;
+  --font:'DM Sans',sans-serif;
+  color-scheme: light;
+}
+[data-theme="jade"] .modal { box-shadow: 0 20px 60px rgba(0,0,0,.12); }
+[data-theme="jade"] #overlay { background: rgba(6,78,59,.4); }
+[data-theme="jade"] .login-bg-glow { background: radial-gradient(circle, color-mix(in srgb, var(--acc) 10%, transparent) 0%, transparent 70%); }
+[data-theme="jade"] .kpi { box-shadow: 0 1px 6px rgba(5,150,105,.05); }
+[data-theme="jade"] ::-webkit-scrollbar-thumb { background: var(--b2); }
+
+/* ══════════════════════════════════════════════════════
+   SLATE PRO — Blanco/gris · Negro · Editorial neutro
+══════════════════════════════════════════════════════ */
+[data-theme="slate"] {
+  --bg:#f8fafc; --s1:#ffffff; --s2:#f1f5f9; --s3:#e8edf5; --s4:#dde4ec;
+  --b1:#e2e8f0; --b2:#cbd5e1; --b3:#94a3b8;
+  --text:#0f172a; --t2:#64748b; --t3:#94a3b8;
+  --acc:#1e293b; --acc2:#475569;
+  --green:#16a34a; --red:#dc2626; --yellow:#d97706;
+  --font:'Outfit',sans-serif;
+  color-scheme: light;
+}
+[data-theme="slate"] .modal { box-shadow: 0 20px 60px rgba(0,0,0,.12); }
+[data-theme="slate"] #overlay { background: rgba(0,0,0,.4); }
+[data-theme="slate"] .kpi { box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+[data-theme="slate"] .sb-logo-mark { box-shadow: none; border: 1px solid var(--b2); }
+[data-theme="slate"] .tb-av { background: var(--text); color: #fff; }
+[data-theme="slate"] ::-webkit-scrollbar-thumb { background: var(--b2); }
+[data-theme="slate"] .btn-p:hover { box-shadow: 0 4px 12px rgba(30,41,59,.25); transform: translateY(-1px); }
+
+/* ══════════════════════════════════════════════════════
+   AURORA — Negro noche · Cian + Violeta · Futurista
+══════════════════════════════════════════════════════ */
+[data-theme="aurora"] {
+  --bg:#030b12; --s1:#070e18; --s2:#0d1620; --s3:#121e2a; --s4:#182535;
+  --b1:rgba(6,182,212,.12); --b2:rgba(6,182,212,.2); --b3:rgba(6,182,212,.38);
+  --text:#e0f4ff; --t2:#4d7a9a; --t3:#2a4a6a;
+  --acc:#06b6d4; --acc2:#8b5cf6;
+  --green:#34d399; --red:#fb7185; --yellow:#fcd34d;
+  --font:'Geist','Inter',sans-serif;
+  color-scheme: dark;
+}
+[data-theme="aurora"] .sb-logo-mark {
+  background: linear-gradient(135deg, #06b6d4, #8b5cf6);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--acc) 30%, transparent);
+}
+[data-theme="aurora"] .tb-av { background: linear-gradient(135deg, #06b6d4, #8b5cf6); }
+[data-theme="aurora"] .dot-green { box-shadow: 0 0 8px var(--green); }
+[data-theme="aurora"] .scan-line { background: linear-gradient(90deg, transparent, var(--acc), transparent); box-shadow: 0 0 8px var(--acc); }

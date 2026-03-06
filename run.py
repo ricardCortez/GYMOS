@@ -136,7 +136,7 @@ if __name__ == "__main__":
             "backend.main:app",
             host="0.0.0.0",
             port=PORT,
-            reload=False,
+            reload=True,
             log_level="info",
             ssl_certfile=ssl_certfile,
             ssl_keyfile=ssl_keyfile,
