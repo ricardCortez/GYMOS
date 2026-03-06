@@ -2,6 +2,8 @@
 //  BOOT
 // ══════════════════════════════════════════════════════════════
 async function boot() {
+  // Apply saved theme immediately before anything renders
+  initTheme();
   setInterval(tick, 1000); tick();
 
   const ok = await pingServer();

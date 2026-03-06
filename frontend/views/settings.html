@@ -1,3 +1,140 @@
+<!-- ═══ Tema de la Interfaz ══════════════════════════════ -->
+  <div class="panel" style="margin-bottom:14px">
+    <div class="ph"><span class="ph-title">🎨 Tema de la Interfaz</span></div>
+    <div class="pb">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px" id="theme-grid">
+
+        <div class="theme-card" data-theme="infrared" onclick="applyTheme('infrared')">
+          <div class="theme-preview" style="background:#060810">
+            <div style="display:flex;height:100%">
+              <div style="width:30%;background:#0c0d1a;border-right:1px solid #232547"></div>
+              <div style="flex:1;padding:5px;display:flex;flex-direction:column;gap:3px">
+                <div style="height:8px;background:#1f2240;border-radius:2px"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-top:2px">
+                  <div style="height:20px;background:#111325;border-radius:2px;border-left:2px solid #ff6b00"></div>
+                  <div style="height:20px;background:#111325;border-radius:2px;border-left:2px solid #ff8c00"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="theme-info">
+            <div class="theme-name">🔥 Infrared</div>
+            <div class="theme-desc">Original · Naranja</div>
+          </div>
+        </div>
+
+        <div class="theme-card" data-theme="arctic" onclick="applyTheme('arctic')">
+          <div class="theme-preview" style="background:#f0f4f8">
+            <div style="display:flex;height:100%">
+              <div style="width:30%;background:#ffffff;border-right:1px solid #e2e8f0"></div>
+              <div style="flex:1;padding:5px;display:flex;flex-direction:column;gap:3px">
+                <div style="height:8px;background:#fff;border-radius:2px;border:1px solid #e2e8f0"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-top:2px">
+                  <div style="height:20px;background:#fff;border-radius:2px;border:1px solid #e2e8f0;border-top:2px solid #2563eb"></div>
+                  <div style="height:20px;background:#fff;border-radius:2px;border:1px solid #e2e8f0;border-top:2px solid #0891b2"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="theme-info">
+            <div class="theme-name">❄️ Arctic</div>
+            <div class="theme-desc">Claro · Azul</div>
+          </div>
+        </div>
+
+        <div class="theme-card" data-theme="violet" onclick="applyTheme('violet')">
+          <div class="theme-preview" style="background:#0f0f14">
+            <div style="display:flex;height:100%">
+              <div style="width:30%;background:#17171f;border-right:1px solid rgba(255,255,255,.07)"></div>
+              <div style="flex:1;padding:5px;display:flex;flex-direction:column;gap:3px">
+                <div style="height:8px;background:#1e1e28;border-radius:2px"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-top:2px">
+                  <div style="height:20px;background:#1e1e28;border-radius:2px;border-left:2px solid #7c3aed"></div>
+                  <div style="height:20px;background:#1e1e28;border-radius:2px;border-left:2px solid #c026d3"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="theme-info">
+            <div class="theme-name">🌆 Violet Dusk</div>
+            <div class="theme-desc">Oscuro · Violeta</div>
+          </div>
+        </div>
+
+        <div class="theme-card" data-theme="jade" onclick="applyTheme('jade')">
+          <div class="theme-preview" style="background:#f0faf5">
+            <div style="display:flex;height:100%">
+              <div style="width:30%;background:#ffffff;border-right:1px solid #d1fae5"></div>
+              <div style="flex:1;padding:5px;display:flex;flex-direction:column;gap:3px">
+                <div style="height:8px;background:#fff;border-radius:2px;border:1px solid #d1fae5"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-top:2px">
+                  <div style="height:20px;background:#fff;border-radius:2px;border:1px solid #d1fae5;border-top:2px solid #059669"></div>
+                  <div style="height:20px;background:#fff;border-radius:2px;border:1px solid #d1fae5;border-top:2px solid #0891b2"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="theme-info">
+            <div class="theme-name">🌿 Jade</div>
+            <div class="theme-desc">Claro · Verde</div>
+          </div>
+        </div>
+
+        <div class="theme-card" data-theme="slate" onclick="applyTheme('slate')">
+          <div class="theme-preview" style="background:#f8fafc">
+            <div style="display:flex;height:100%">
+              <div style="width:30%;background:#ffffff;border-right:1px solid #e2e8f0"></div>
+              <div style="flex:1;padding:5px;display:flex;flex-direction:column;gap:3px">
+                <div style="height:8px;background:#fff;border-radius:2px;border:1px solid #e2e8f0"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-top:2px">
+                  <div style="height:20px;background:#fff;border-radius:2px;border:1px solid #e2e8f0;border-top:2px solid #1e293b"></div>
+                  <div style="height:20px;background:#fff;border-radius:2px;border:1px solid #e2e8f0;border-top:2px solid #475569"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="theme-info">
+            <div class="theme-name">🪨 Slate Pro</div>
+            <div class="theme-desc">Neutro · Editorial</div>
+          </div>
+        </div>
+
+        <div class="theme-card" data-theme="aurora" onclick="applyTheme('aurora')">
+          <div class="theme-preview" style="background:#030b12">
+            <div style="display:flex;height:100%">
+              <div style="width:30%;background:#070e18;border-right:1px solid rgba(6,182,212,.12)"></div>
+              <div style="flex:1;padding:5px;display:flex;flex-direction:column;gap:3px">
+                <div style="height:8px;background:#0d1620;border-radius:2px"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-top:2px">
+                  <div style="height:20px;background:#0d1620;border-radius:2px;border-left:2px solid #06b6d4"></div>
+                  <div style="height:20px;background:#0d1620;border-radius:2px;border-left:2px solid #8b5cf6"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="theme-info">
+            <div class="theme-name">🌊 Aurora</div>
+            <div class="theme-desc">Oscuro · Cian</div>
+          </div>
+        </div>
+
+      </div>
+
+      <style>
+        .theme-card {
+          border: 2px solid var(--b1); border-radius: var(--r2);
+          overflow: hidden; cursor: pointer; transition: all .2s;
+        }
+        .theme-card:hover { border-color: var(--b3); transform: translateY(-2px); }
+        .theme-card.active { border-color: var(--acc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc) 20%, transparent); }
+        .theme-preview { height: 60px; }
+        .theme-info { padding: 8px 10px; background: var(--s1); }
+        .theme-name { font-size: 12px; font-weight: 700; color: var(--text); }
+        .theme-desc { font-size: 10px; color: var(--t2); margin-top:1px; }
+      </style>
+    </div>
+  </div>
+
 <div style="max-width:min(720px,100%)">
 
   <!-- ═══ Información del Gimnasio ═══════════════════════════ -->

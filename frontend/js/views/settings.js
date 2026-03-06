@@ -2,6 +2,35 @@
 //  SETTINGS
 // ══════════════════════════════════════════════════════════════
 
+// ── Temas de interfaz ─────────────────────────────────────────
+
+const THEMES = ['infrared','arctic','violet','jade','slate','aurora'];
+
+function applyTheme(theme) {
+  if (!THEMES.includes(theme)) theme = 'infrared';
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('gymos_theme', theme);
+  // Update active card highlight (only if settings view is open)
+  document.querySelectorAll('.theme-card').forEach(c => {
+    c.classList.toggle('active', c.dataset.theme === theme);
+  });
+  toast('🎨 Tema aplicado: ' + theme, 'in');
+}
+
+function initTheme() {
+  const saved = localStorage.getItem('gymos_theme') || 'infrared';
+  document.documentElement.setAttribute('data-theme', saved);
+}
+
+function markActiveTheme() {
+  const current = localStorage.getItem('gymos_theme') || 'infrared';
+  document.querySelectorAll('.theme-card').forEach(c => {
+    c.classList.toggle('active', c.dataset.theme === current);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+
 async function loadSettings() {
   try {
     const s = await GET('/settings');
@@ -22,6 +51,9 @@ async function loadSettings() {
     document.getElementById('set-cooldown').value = s.checkinCooldown || 3600;
     document.getElementById('gym-av').textContent = (s.gymName || 'G')[0].toUpperCase();
   } catch(e) { toast('Error cargando configuración: ' + e.message, 'er'); }
+
+  // Mark current active theme card
+  markActiveTheme();
 
   // Show danger zone only for superadmin
   const danger  = document.getElementById('panel-danger');
