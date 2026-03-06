@@ -7,15 +7,29 @@ GET  /api/tools/export-members        — admin+: exportar miembros CSV
 GET  /api/tools/export-members-excel  — admin+: exportar miembros XLSX (via CSV)
 GET  /api/tools/export-report         — admin+: exportar reporte de asistencia y pagos CSV
 """
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-import csv, io, json
+import csv, io
 from datetime import datetime
 
 from ..database import get_db, Member, Attendance, Payment, Membership, Plan, AdminUser
 from ..routes.admin_users import require_role, get_current_user
+from ..auth import decode_token
+
+
+def _auth_export(token: str = Query(None), db: Session = Depends(get_db)) -> AdminUser:
+    """Permite autenticación via ?token=... para descargas directas de archivos."""
+    if not token:
+        raise HTTPException(401, "Token requerido")
+    payload = decode_token(token)
+    if not payload:
+        raise HTTPException(401, "Token inválido o expirado")
+    user = db.query(AdminUser).filter_by(username=payload.get("sub"), active=True).first()
+    if not user:
+        raise HTTPException(401, "Usuario no encontrado")
+    return user
 
 router = APIRouter(prefix="/api/tools", tags=["Herramientas"])
 
@@ -77,7 +91,7 @@ def clear_all(
 @router.get("/export-members")
 def export_members(
     db: Session = Depends(get_db),
-    _: AdminUser = Depends(require_role("admin")),
+    _: AdminUser = Depends(_auth_export),
 ):
     members = db.query(Member).filter_by(active=True).all()
 
@@ -112,7 +126,7 @@ def export_members(
 @router.get("/export-report")
 def export_report(
     db: Session = Depends(get_db),
-    _: AdminUser = Depends(require_role("admin")),
+    _: AdminUser = Depends(_auth_export),
 ):
     output = io.StringIO()
     writer = csv.writer(output)

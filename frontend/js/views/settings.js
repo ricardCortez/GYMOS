@@ -2,6 +2,35 @@
 //  SETTINGS
 // ══════════════════════════════════════════════════════════════
 
+// ── Temas de interfaz ─────────────────────────────────────────
+
+const THEMES = ['infrared','arctic','violet','jade','slate','aurora'];
+
+function applyTheme(theme) {
+  if (!THEMES.includes(theme)) theme = 'infrared';
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('gymos_theme', theme);
+  // Update active card highlight (only if settings view is open)
+  document.querySelectorAll('.theme-card').forEach(c => {
+    c.classList.toggle('active', c.dataset.theme === theme);
+  });
+  toast('🎨 Tema aplicado: ' + theme, 'in');
+}
+
+function initTheme() {
+  const saved = localStorage.getItem('gymos_theme') || 'infrared';
+  document.documentElement.setAttribute('data-theme', saved);
+}
+
+function markActiveTheme() {
+  const current = localStorage.getItem('gymos_theme') || 'infrared';
+  document.querySelectorAll('.theme-card').forEach(c => {
+    c.classList.toggle('active', c.dataset.theme === current);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+
 async function loadSettings() {
   try {
     const s = await GET('/settings');
@@ -22,6 +51,9 @@ async function loadSettings() {
     document.getElementById('set-cooldown').value = s.checkinCooldown || 3600;
     document.getElementById('gym-av').textContent = (s.gymName || 'G')[0].toUpperCase();
   } catch(e) { toast('Error cargando configuración: ' + e.message, 'er'); }
+
+  // Mark current active theme card
+  markActiveTheme();
 
   // Show danger zone only for superadmin
   const danger  = document.getElementById('panel-danger');
@@ -52,20 +84,26 @@ async function saveSettings() {
 
 // ── Exportar ──────────────────────────────────────────────────
 
-function exportMembers() {
+function downloadCSV(endpoint, defaultFilename) {
+  const token = AUTH_TOKEN || sessionStorage.getItem('gymos_token') || '';
+  if (!token) { toast('❌ Sesión no iniciada', 'er'); return; }
+  const url = API + endpoint + '?token=' + encodeURIComponent(token);
   const a = document.createElement('a');
-  a.href = window.location.origin + '/api/tools/export-members';
-  a.download = '';
+  a.href = url;
+  a.download = defaultFilename;
+  a.target = '_blank';
+  document.body.appendChild(a);
   a.click();
-  toast('📥 Descargando miembros...', 'in');
+  document.body.removeChild(a);
+  toast('📥 Descargando...', 'in');
+}
+
+function exportMembers() {
+  downloadCSV('/tools/export-members', 'miembros.csv');
 }
 
 function exportReport() {
-  const a = document.createElement('a');
-  a.href = window.location.origin + '/api/tools/export-report';
-  a.download = '';
-  a.click();
-  toast('📥 Descargando reporte...', 'in');
+  downloadCSV('/tools/export-report', 'reporte_gymos.csv');
 }
 
 function exportDB() {
