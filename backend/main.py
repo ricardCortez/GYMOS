@@ -70,6 +70,13 @@ def serve_appjs():
         media_type="application/javascript",
     )
 
+@app.get("/favicon.ico")
+def serve_favicon():
+    return FileResponse(
+        os.path.join(FRONTEND_DIR, "favicon.ico"),
+        media_type="image/x-icon",
+    )
+
 @app.get("/style.css")
 def serve_css():
     return FileResponse(
