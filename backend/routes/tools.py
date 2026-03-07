@@ -134,7 +134,8 @@ def export_report(
     # ── Hoja 1: Resumen ──
     members  = db.query(Member).filter_by(active=True).count()
     att_all  = db.query(Attendance).count()
-    pay_all  = db.execute(text("SELECT COALESCE(SUM(amount),0) FROM payments")).scalar()
+    pay_raw  = db.execute(text("SELECT COALESCE(SUM(amount),0) FROM payments")).scalar()
+    pay_all  = float(pay_raw or 0)
 
     writer.writerow(["=== RESUMEN GENERAL ==="])
     writer.writerow(["Miembros activos", members])
@@ -146,31 +147,45 @@ def export_report(
     # ── Hoja 2: Asistencia (últimos 90 días) ──
     writer.writerow(["=== ASISTENCIA (últimos 90 días) ==="])
     writer.writerow(["Fecha", "Hora", "Miembro", "Método", "Confianza"])
-    rows = db.execute(text("""
-        SELECT a.check_in, m.name, a.method, a.confidence
-        FROM attendance a
-        JOIN members m ON a.member_id = m.id
-        WHERE a.check_in >= date('now', '-90 days')
-        ORDER BY a.check_in DESC
-    """)).fetchall()
-    for row in rows:
-        dt = str(row[0])
-        writer.writerow([dt[:10], dt[11:16], row[1], row[2] or "manual", f"{(row[3] or 0)*100:.0f}%"])
+    try:
+        rows = db.execute(text("""
+            SELECT a.check_in, m.name, a.method, a.confidence
+            FROM attendance a
+            JOIN members m ON a.member_id = m.id
+            WHERE a.check_in >= date('now', '-90 days')
+            ORDER BY a.check_in DESC
+        """)).fetchall()
+        for row in rows:
+            dt = str(row[0]) if row[0] else ""
+            conf = row[3]
+            writer.writerow([
+                dt[:10], dt[11:16] if len(dt) > 10 else "",
+                row[1] or "", row[2] or "manual",
+                f"{float(conf)*100:.0f}%" if conf else "0%"
+            ])
+    except Exception as e:
+        writer.writerow([f"Error al leer asistencia: {e}"])
     writer.writerow([])
 
     # ── Hoja 3: Pagos ──
     writer.writerow(["=== PAGOS ==="])
     writer.writerow(["Fecha", "Miembro", "Plan", "Monto", "Método", "Notas"])
-    pays = db.execute(text("""
-        SELECT p.created_at, m.name, pl.name, p.amount, p.method, p.notes
-        FROM payments p
-        JOIN members m ON p.member_id = m.id
-        LEFT JOIN plans pl ON p.plan_id = pl.id
-        ORDER BY p.created_at DESC
-    """)).fetchall()
-    for row in pays:
-        dt = str(row[0])
-        writer.writerow([dt[:10], row[1], row[2] or "", f"{row[3]:.2f}", row[4] or "", row[5] or ""])
+    try:
+        pays = db.execute(text("""
+            SELECT p.created_at, m.name, p.concept, p.amount, p.method, p.notes
+            FROM payments p
+            JOIN members m ON p.member_id = m.id
+            ORDER BY p.created_at DESC
+        """)).fetchall()
+        for row in pays:
+            dt = str(row[0]) if row[0] else ""
+            writer.writerow([
+                dt[:10], row[1] or "", row[2] or "",
+                f"{float(row[3]):.2f}" if row[3] else "0.00",
+                row[4] or "", row[5] or ""
+            ])
+    except Exception as e:
+        writer.writerow([f"Error al leer pagos: {e}"])
 
     output.seek(0)
     filename = f"reporte_gymos_{datetime.now().strftime('%Y%m%d_%H%M')}.csv"

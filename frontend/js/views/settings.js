@@ -84,18 +84,26 @@ async function saveSettings() {
 
 // ── Exportar ──────────────────────────────────────────────────
 
-function downloadCSV(endpoint, defaultFilename) {
-  const token = AUTH_TOKEN || sessionStorage.getItem('gymos_token') || '';
-  if (!token) { toast('❌ Sesión no iniciada', 'er'); return; }
-  const url = API + endpoint + '?token=' + encodeURIComponent(token);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = defaultFilename;
-  a.target = '_blank';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  toast('📥 Descargando...', 'in');
+async function downloadCSV(endpoint, defaultFilename) {
+  toast('📥 Preparando descarga...', 'in');
+  try {
+    const res = await fetch(API + endpoint + '?token=' + encodeURIComponent(AUTH_TOKEN || ''));
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Error ' + res.status);
+    }
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = defaultFilename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
+    toast('✅ Descarga lista', 'ok');
+  } catch(e) {
+    toast('❌ Error: ' + e.message, 'er');
+  }
 }
 
 function exportMembers() {
