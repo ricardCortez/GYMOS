@@ -1,29 +1,102 @@
-gymOS/
-├── backend/
-│   ├── main.py          → Inicializa FastAPI y registra rutas
-│   ├── auth.py          → Autenticación JWT + bcrypt
-│   ├── database.py      → Modelos y configuración SQLAlchemy
-│   ├── face_service.py  → Servicio de reconocimiento facial (InsightFace)
-│   ├── config.py        → Configuración general
-│   ├── routes/
-│   │   ├── admin_user.py
-│   │   ├── admin_users.py
-│   │   ├── plans.py
-│   │   ├── members.py
-│   │   ├── face.py
-│   │   ├── attendance.py
-│   │   ├── memberships.py
-│   │   ├── payments.py
-│   │   ├── announcements.py
-│   │   ├── settings.py
-│   │   ├── dashboard.py
-│   │   └── audio.py
+GYMOS - Estructura del Proyecto
+================================
+
+GYMOS/
+├── .env.example              # Plantilla de variables de entorno
+├── .gitignore
+├── LICENSE
+├── README.md
+├── requirements.txt          # Dependencias Python
+├── run.py                    # Punto de entrada
+│                             #   python run.py          → HTTP  (local)
+│                             #   python run.py --https  → HTTPS (red local, cámara desde otras PCs)
+│                             #   python run.py --dev    → HTTP  con auto-reload
 │
-├── frontend/
-│   ├── index.html       → Estructura HTML + estilos
-│   └── app.js           → Lógica completa (SPA ligera)
+├── backend/                  # Paquete Python del servidor FastAPI
+│   ├── __init__.py
+│   ├── config.py             # Rutas de datos y variables de entorno (.env)
+│   │                         #   DB_PATH, AUDIO_DIR, CERTS_DIR, LOGS_DIR
+│   │                         #   SECRET_KEY, PORT
+│   ├── auth.py               # JWT (crear/verificar tokens) + bcrypt + roles
+│   ├── face_service.py       # Reconocimiento facial InsightFace (ArcFace buffalo_l)
+│   │                         #   Thread-safe, cache en memoria, distancia coseno
+│   ├── models.py             # Definición de modelos ORM (SQLAlchemy)
+│   │                         #   Plan, Member, Membership, Attendance
+│   │                         #   Payment, Announcement, Setting
+│   │                         #   Promotion, AdminUser, AudioAnnouncement
+│   ├── database.py           # Infraestructura de BD: engine, sesión, init_db
+│   │                         #   SQLite WAL mode, índices, migraciones automáticas
+│   │                         #   Re-exporta todos los modelos (backward compat)
+│   └── routes/               # Routers FastAPI (un archivo por dominio)
+│       ├── __init__.py
+│       ├── admin_users.py    # POST /api/auth/login|verify|change-password
+│       │                     # GET|POST|PUT|PATCH|DELETE /api/admin-users
+│       ├── announcements.py  # GET|POST|PUT|DELETE /api/announcements
+│       ├── attendance.py     # POST /api/attendance/checkin
+│       │                     # GET  /api/attendance/today|history|stats|by-hour|top-members
+│       ├── audio.py          # GET|POST /api/audio-files  (upload, play, delete)
+│       ├── dashboard.py      # GET /api/dashboard  (KPIs)
+│       ├── face.py           # POST /api/face/register|identify|status
+│       ├── members.py        # GET|POST|PUT|DELETE /api/members
+│       ├── memberships.py    # GET|POST /api/memberships
+│       │                     # PUT /api/memberships/{id}/renew
+│       ├── payments.py       # GET|POST /api/payments
+│       ├── plans.py          # GET|POST|PUT|DELETE /api/plans
+│       ├── promotions.py     # GET|POST|PUT|DELETE /api/promotions
+│       │                     # POST /api/promotions/validate|apply
+│       ├── settings.py       # GET|PUT /api/settings
+│       └── tools.py          # POST /api/tools/clear-*  (superadmin)
+│                             # GET  /api/tools/export-members|export-report (CSV)
 │
-├── data/                → Base de datos SQLite (gymOS.db)
-├── requirements.txt     → Dependencias
-├── run.py               → Punto de entrada del sistema
-└── README.md
+├── frontend/                 # SPA - Interfaz de usuario
+│   ├── favicon.ico
+│   ├── index.html            # Shell HTML + barra lateral + topbar
+│   ├── app.js                # Punto de entrada JS legacy (compatibilidad)
+│   ├── style.css             # Estilos globales
+│   ├── themes.css            # Variables de temas de color
+│   │
+│   ├── js/                   # Módulos JavaScript
+│   │   ├── core.js           # Variables globales, helpers API (GET/POST/PUT/DEL)
+│   │   ├── auth.js           # Login, logout, permisos por rol
+│   │   ├── boot.js           # Inicialización tras autenticación
+│   │   ├── camera.js         # Cámara: reconocimiento en tiempo real + captura registro
+│   │   ├── tts.js            # Text-to-Speech (bienvenida, anuncios)
+│   │   ├── ui.js             # Navegación, modales, toasts, reloj, ping
+│   │   └── views/            # Lógica de cada vista
+│   │       ├── announcements.js
+│   │       ├── attendance.js
+│   │       ├── audio.js
+│   │       ├── dashboard.js
+│   │       ├── members.js
+│   │       ├── memberships.js
+│   │       ├── payments.js
+│   │       ├── profiles.js
+│   │       ├── promotions.js
+│   │       ├── register.js
+│   │       ├── reports.js
+│   │       └── settings.js
+│   │
+│   └── views/                # Templates HTML de cada vista (carga dinámica)
+│       ├── announcements.html
+│       ├── attendance.html
+│       ├── dashboard.html
+│       ├── members.html
+│       ├── memberships.html
+│       ├── payments.html
+│       ├── profiles.html
+│       ├── promotions.html
+│       ├── register.html
+│       ├── reports.html
+│       └── settings.html
+│
+└── data/                     # Generado en runtime (excluido de git)
+    ├── gymOS.db              # Base de datos SQLite
+    ├── audio/                # Archivos de audio subidos
+    ├── certs/                # Certificados SSL autofirmados
+    └── logs/                 # Logs del servidor
+
+================================================
+Base de datos: data/gymOS.db  (SQLite)
+Arranque    : python run.py
+Puerto      : 8000  (configurable con GYMOS_PORT en .env)
+================================================

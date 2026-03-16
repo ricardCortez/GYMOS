@@ -4,9 +4,9 @@ GymOS - Autenticación con JWT + bcrypt directo (sin passlib)
 from jose import JWTError, jwt
 from datetime import datetime, timedelta, timezone
 from typing import Optional
-import bcrypt, os
+import bcrypt
 
-SECRET_KEY = os.getenv("GYMOS_SECRET", "gymos-secret-key-change-in-production-2024")
+from .config import SECRET_KEY
 ALGORITHM  = "HS256"
 TOKEN_EXPIRE_HOURS = 12
 
