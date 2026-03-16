@@ -2,7 +2,7 @@
 Servicio de Reconocimiento Facial con InsightFace (ArcFace buffalo_l)
 No entrena desde cero — registra embeddings por miembro y compara por distancia coseno.
 """
-import numpy as np, io, base64, logging
+import numpy as np, io, base64, logging, threading
 from PIL import Image
 from typing import Optional, List, Tuple
 
@@ -22,6 +22,7 @@ class FaceService:
         self.app        = None
         self._ready     = False
         self._cache: dict[str, np.ndarray] = {}  # {member_id: embedding}
+        self._lock      = threading.RLock()       # protege _cache en accesos concurrentes
 
     def initialize(self) -> bool:
         if not AVAILABLE:
@@ -105,7 +106,8 @@ class FaceService:
 
         avg = np.mean(embs, axis=0)
         avg = avg / (np.linalg.norm(avg) + 1e-10)
-        self._cache[member_id] = avg
+        with self._lock:
+            self._cache[member_id] = avg
 
         msg = f"Registrado con {len(embs)} muestra(s)"
         if errors:
@@ -114,10 +116,12 @@ class FaceService:
 
     def load_all(self, members: list):
         """Carga todos los embeddings de la DB en memoria. Llamar al iniciar."""
-        self._cache.clear()
+        new_cache = {}
         for m in members:
             if m.get("face_embedding"):
-                self._cache[m["id"]] = self.bytes_to_emb(m["face_embedding"])
+                new_cache[m["id"]] = self.bytes_to_emb(m["face_embedding"])
+        with self._lock:
+            self._cache = new_cache
         logger.info(f"Cache facial: {len(self._cache)} miembros")
 
     def identify(self, image_data) -> Optional[Tuple[str, float]]:
@@ -125,14 +129,19 @@ class FaceService:
         Identifica rostro contra todos los registrados.
         Retorna (member_id, confidence 0-1) o None.
         """
-        if not self._ready or not self._cache:
+        if not self._ready:
             return None
+        with self._lock:
+            if not self._cache:
+                return None
+            cache_snapshot = dict(self._cache)   # copia local para no mantener el lock durante inferencia
+
         emb = self.extract(image_data)
         if emb is None:
             return None
 
         best_id, best_dist = None, float("inf")
-        for mid, stored in self._cache.items():
+        for mid, stored in cache_snapshot.items():
             d = self.cosine_dist(emb, stored)
             if d < best_dist:
                 best_dist, best_id = d, mid
@@ -143,7 +152,8 @@ class FaceService:
         return None
 
     def remove(self, member_id: str):
-        self._cache.pop(member_id, None)
+        with self._lock:
+            self._cache.pop(member_id, None)
 
     def set_threshold(self, t: float):
         self.threshold = max(0.2, min(0.7, float(t)))

@@ -17,6 +17,7 @@ router = APIRouter(prefix="/api/audio-files", tags=["Audio"])
 from ..config import AUDIO_DIR
 
 ALLOWED_EXTENSIONS = {".mp3", ".wav", ".ogg", ".m4a"}
+MAX_UPLOAD_BYTES   = 50 * 1024 * 1024  # 50 MB
 MIME_TYPES = {
     ".mp3": "audio/mpeg",
     ".wav": "audio/wav",
@@ -57,6 +58,9 @@ async def upload_audio(
     fpath    = str(AUDIO_DIR / filename)
 
     content = await file.read()
+    if len(content) > MAX_UPLOAD_BYTES:
+        raise HTTPException(413, f"Archivo demasiado grande. Máximo permitido: {MAX_UPLOAD_BYTES // (1024*1024)} MB")
+
     with open(fpath, "wb") as f:
         f.write(content)
 

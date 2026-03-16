@@ -15,9 +15,9 @@ router = APIRouter(prefix="/api/memberships", tags=["Membresías"])
 
 
 # ── Serializer ────────────────────────────────────────────────
-def _ms(ms: Membership, db: Session) -> dict:
-    m    = db.query(Member).get(ms.member_id)
-    plan = db.query(Plan).get(ms.plan_id)
+def _ms_dict(ms: Membership, members_map: dict, plans_map: dict) -> dict:
+    m    = members_map.get(ms.member_id)
+    plan = plans_map.get(ms.plan_id)
     today = date.today()
     end   = datetime.strptime(ms.end_date, "%Y-%m-%d").date()
     return {
@@ -41,7 +41,17 @@ def get_memberships(active_only: bool = False, db: Session = Depends(get_db)):
     q = db.query(Membership)
     if active_only:
         q = q.filter(Membership.end_date >= str(date.today()))
-    return [_ms(ms, db) for ms in q.order_by(Membership.end_date.desc()).all()]
+    rows = q.order_by(Membership.end_date.desc()).all()
+    if not rows:
+        return []
+
+    # Bulk load miembros y planes: 2 queries totales en vez de 2×N
+    member_ids = list({ms.member_id for ms in rows})
+    plan_ids   = list({ms.plan_id   for ms in rows})
+    members_map = {m.id: m for m in db.query(Member).filter(Member.id.in_(member_ids)).all()}
+    plans_map   = {p.id: p for p in db.query(Plan).filter(Plan.id.in_(plan_ids)).all()}
+
+    return [_ms_dict(ms, members_map, plans_map) for ms in rows]
 
 
 @router.post("")
@@ -75,7 +85,7 @@ def create_membership(data: dict = Body(...), db: Session = Depends(get_db)):
     db.add(ms)
     db.add(pay)
     db.commit()
-    return _ms(ms, db)
+    return _ms_dict(ms, {ms.member_id: db.query(Member).get(ms.member_id)}, {plan.id: plan})
 
 
 @router.put("/{msid}/renew")
@@ -104,4 +114,5 @@ def renew_membership(msid: str, data: dict = Body(...), db: Session = Depends(ge
     )
     db.add(pay)
     db.commit()
-    return _ms(ms, db)
+    member = db.query(Member).get(ms.member_id)
+    return _ms_dict(ms, {ms.member_id: member}, {plan.id: plan})

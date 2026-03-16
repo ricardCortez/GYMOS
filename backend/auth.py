@@ -2,7 +2,7 @@
 GymOS - Autenticación con JWT + bcrypt directo (sin passlib)
 """
 from jose import JWTError, jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 import bcrypt, os
 
@@ -21,7 +21,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 def create_token(data: dict, expires_hours: int = TOKEN_EXPIRE_HOURS) -> str:
     payload = data.copy()
-    payload["exp"] = datetime.utcnow() + timedelta(hours=expires_hours)
+    payload["exp"] = datetime.now(timezone.utc) + timedelta(hours=expires_hours)
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 def decode_token(token: str) -> Optional[dict]:

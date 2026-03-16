@@ -2,7 +2,7 @@
 GymOS - Capa de Base de Datos: SQLAlchemy + SQLite
 """
 from sqlalchemy import (create_engine, Column, String, Float, Integer,
-                        Boolean, Text, DateTime, ForeignKey, LargeBinary)
+                        Boolean, Text, DateTime, ForeignKey, LargeBinary, Index, event)
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from sqlalchemy.sql import func
 import os, json, uuid
@@ -11,7 +11,20 @@ from datetime import datetime
 from .config import DB_PATH, ensure_dirs as _ensure_dirs
 _ensure_dirs()
 
-engine       = create_engine(f"sqlite:///{DB_PATH}", connect_args={"check_same_thread": False})
+engine = create_engine(
+    f"sqlite:///{DB_PATH}",
+    connect_args={"check_same_thread": False},
+)
+
+# WAL mode: lecturas concurrentes sin bloquear escrituras
+@event.listens_for(engine, "connect")
+def _set_sqlite_pragmas(dbapi_conn, _):
+    cur = dbapi_conn.cursor()
+    cur.execute("PRAGMA journal_mode=WAL")
+    cur.execute("PRAGMA synchronous=NORMAL")
+    cur.execute("PRAGMA foreign_keys=ON")
+    cur.close()
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base         = declarative_base()
 
@@ -66,6 +79,10 @@ class Membership(Base):
     created_at = Column(DateTime, server_default=func.now())
     member = relationship("Member", back_populates="memberships")
     plan   = relationship("Plan",   back_populates="memberships")
+    __table_args__ = (
+        Index("ix_memberships_member_id", "member_id"),
+        Index("ix_memberships_end_date",  "end_date"),
+    )
 
 class Attendance(Base):
     __tablename__ = "attendance"
@@ -77,6 +94,10 @@ class Attendance(Base):
     confidence = Column(Float,   nullable=True)
     notes      = Column(Text,    default="")
     member = relationship("Member", back_populates="attendance")
+    __table_args__ = (
+        Index("ix_attendance_member_id", "member_id"),
+        Index("ix_attendance_check_in",  "check_in"),
+    )
 
 class Payment(Base):
     __tablename__ = "payments"
