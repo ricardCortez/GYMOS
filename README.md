@@ -5,95 +5,54 @@
 GymOS es una plataforma web para la administración de gimnasios que integra:
 
 * Gestión de miembros
-* Control de asistencia automático
-* Reconocimiento facial con IA
-* Huella digital vía WebAuthn
-* Gestión de planes y pagos
-* Dashboard administrativo
-* Anuncios programados por voz
+* Control de asistencia automático con reconocimiento facial en tiempo real
+* Reconocimiento facial con IA (InsightFace ArcFace buffalo_l)
+* Gestión de planes, membresías y pagos
+* Dashboard administrativo con estadísticas
+* Anuncios programados por voz (Text-to-Speech)
+* Promociones y descuentos
+* Roles de acceso (superadmin / admin / staff)
 
 ---
 
-# 🚀 Instalación Rápida
+# 🚀 Instalación
 
-## 🪟 Windows
-
-```
-1. Doble clic en instalar_windows.bat
-2. Espera que finalice la instalación
-3. Ejecuta: python run.py
-4. Abre: http://localhost:8000
-```
-
----
-
-## 🐧 Linux / macOS
+## 🐧 Linux (Ubuntu/Debian) — Instalación automática
 
 ```bash
-bash instalar_linux.sh
-python3 run.py
-# Abrir http://localhost:8000
+sudo bash install.sh
 ```
 
----
+El script crea el usuario del sistema, instala dependencias, configura Nginx, genera el certificado SSL y habilita el servicio systemd.
 
-# ▶️ Ejecución Manual
-
-Si ya tienes el entorno configurado:
+## 🪟 Windows — Desarrollo local
 
 ```bash
 pip install -r requirements.txt
-python run.py
-```
-<<<<<<< HEAD
-gymOS/
-├── backend/
-    ├── main.py          →  84 líneas  (antes 500+)  solo inicializa
-    ├── auth.py          →  41 líneas  JWT + bcrypt
-    ├── database.py      → 230 líneas  modelos SQLAlchemy
-    ├── face_service.py  → 142 líneas  InsightFace
-    └── routes/
-        ├── __init__.py
-        ├── plans.py          →  72 líneas
-        ├── members.py        →  90 líneas
-        ├── face.py           → 107 líneas
-        ├── attendance.py     →  98 líneas
-        ├── memberships.py    → 107 líneas
-        ├── payments.py       →  48 líneas
-        ├── announcements.py  →  65 líneas
-        ├── settings.py       →  34 líneas
-        ├── dashboard.py      →  36 líneas
-        ├── admin_users.py    → 176 líneas  (auth + usuarios)
-        └── audio.py          → 105 líneas
-├── frontend/
-│   ├── index.html   ← Solo estructura HTML + CSS (58KB)
-    └── app.js       ← Toda la lógica (93KB)
-├── data/                    ← gymOS.db se crea aquí
-├── requirements.txt
-└── run.py                   ← Arranca todo
-=======
->>>>>>> 7694eb635fdf31c84e319458855d4c90ad7ea356
-
-Servidor disponible en:
-
-```
-http://localhost:8000
+python run.py           # HTTP  → http://localhost:8000
+python run.py --https   # HTTPS → https://localhost:8000  (cámara en red local)
+python run.py --dev     # HTTP  con auto-reload
 ```
 
 ---
 
-# 🌐 Acceso en Red Local
+# 🌐 Acceso
 
-Una vez iniciado, cualquier dispositivo en la misma red puede acceder usando la IP del servidor:
+| Modo | URL |
+|------|-----|
+| Local (HTTP) | `http://localhost:8000` |
+| Local (HTTPS) | `https://localhost:8000` |
+| Red local | `https://<IP-del-servidor>:<puerto>` |
 
-```
-http://192.168.X.X:8000
-```
+> **Nota:** Al usar certificado autofirmado el navegador mostrará advertencia SSL.
+> Haz clic en *Configuración avanzada* → *Continuar de todas formas*.
 
-Ejemplo:
+---
 
-```
-http://192.168.50.70:8000
+# 🔄 Actualización del servidor
+
+```bash
+sudo bash update.sh
 ```
 
 ---
@@ -101,130 +60,149 @@ http://192.168.50.70:8000
 # 📁 Estructura del Proyecto
 
 ```
-gymOS/
-├── backend/
-│   ├── main.py          → Inicializa FastAPI y registra rutas
-│   ├── auth.py          → Autenticación JWT + bcrypt
-│   ├── database.py      → Modelos y configuración SQLAlchemy
-│   ├── face_service.py  → Servicio de reconocimiento facial (InsightFace)
-│   ├── config.py        → Configuración general
-│   ├── routes/
-│   │   ├── admin_user.py
-│   │   ├── admin_users.py
-│   │   ├── plans.py
-│   │   ├── members.py
-│   │   ├── face.py
-│   │   ├── attendance.py
-│   │   ├── memberships.py
-│   │   ├── payments.py
-│   │   ├── announcements.py
-│   │   ├── settings.py
-│   │   ├── dashboard.py
-│   │   └── audio.py
+GYMOS/
+├── run.py                    → Punto de entrada
+│                               python run.py [--https] [--dev]
+├── install.sh                → Instalador automático Linux
+├── update.sh                 → Script de actualización Linux
+├── requirements.txt          → Dependencias Python
+├── .env.example              → Plantilla de variables de entorno
 │
-├── frontend/
-│   ├── index.html       → Estructura HTML + estilos
-│   └── app.js           → Lógica completa (SPA ligera)
+├── backend/                  → Paquete Python (FastAPI)
+│   ├── config.py             → Rutas y variables de entorno
+│   ├── auth.py               → JWT + bcrypt + roles
+│   ├── models.py             → Modelos SQLAlchemy (ORM)
+│   ├── database.py           → Engine, sesión, migraciones, WAL
+│   ├── face_service.py       → Reconocimiento facial InsightFace
+│   └── routes/
+│       ├── admin_users.py    → Auth + gestión de usuarios admin
+│       ├── members.py        → CRUD miembros
+│       ├── memberships.py    → Membresías y renovaciones
+│       ├── payments.py       → Pagos e historial
+│       ├── attendance.py     → Check-in y estadísticas
+│       ├── face.py           → Registro e identificación facial
+│       ├── plans.py          → Planes del gimnasio
+│       ├── promotions.py     → Promociones y descuentos
+│       ├── announcements.py  → Anuncios
+│       ├── audio.py          → Archivos de audio TTS
+│       ├── dashboard.py      → KPIs y estadísticas
+│       ├── settings.py       → Configuración del gimnasio
+│       └── tools.py          → Exportación CSV, limpieza (superadmin)
 │
-├── data/                → Base de datos SQLite (gymOS.db)
-├── requirements.txt     → Dependencias
-├── run.py               → Punto de entrada del sistema
-└── README.md
+├── frontend/                 → SPA (HTML + JS Vanilla)
+│   ├── index.html            → Shell HTML
+│   ├── style.css / themes.css
+│   ├── js/
+│   │   ├── core.js           → Globals, helpers API
+│   │   ├── auth.js           → Login / logout / roles
+│   │   ├── boot.js           → Inicialización post-login
+│   │   ├── camera.js         → Cámara en tiempo real
+│   │   ├── tts.js            → Text-to-Speech
+│   │   ├── ui.js             → Navegación, modales, toasts
+│   │   └── views/            → Lógica de cada vista
+│   └── views/                → Templates HTML (carga dinámica)
+│
+├── deploy/                   → Archivos de despliegue Linux
+│   ├── gymos.service         → Unidad systemd
+│   ├── nginx.conf            → Reverse proxy + SSL
+│   ├── logrotate.conf        → Rotación de logs
+│   └── uvicorn-log.json      → Configuración de logging
+│
+└── data/                     → Generado en runtime (excluido de git)
+    ├── gymOS.db              → Base de datos SQLite
+    ├── audio/                → Audios subidos
+    ├── certs/                → Certificados SSL
+    ├── models/               → Modelo InsightFace buffalo_l (~300 MB)
+    └── logs/                 → Logs del servidor
 ```
 
 ---
 
-# 🧠 Arquitectura Técnica
+# 🏗️ Arquitectura
 
-## Backend
-
-* FastAPI
-* SQLAlchemy
-* SQLite
-* Autenticación con JWT
-* Hash de contraseñas con bcrypt
-* API modular por rutas
-* Arquitectura desacoplada
-
-## Frontend
-
-* HTML + CSS puro
-* JavaScript Vanilla
-* Fetch API para comunicación con backend
-* SPA basada en vistas dinámicas
+```
+Navegador
+    │ HTTPS
+    ▼
+Nginx  (SSL, rate limiting, headers de seguridad)
+    │ HTTP → 127.0.0.1:8000
+    ▼
+Uvicorn + FastAPI  (1 worker — face_service usa caché en memoria)
+    │
+    ├── SQLite (WAL mode, índices optimizados)
+    └── InsightFace buffalo_l (ArcFace, CPU, embeddings 512-dim)
+```
 
 ---
 
-# 📸 Modelo de Reconocimiento Facial
+# 🧠 Reconocimiento Facial
 
 GymOS utiliza el modelo **InsightFace buffalo_l (ArcFace preentrenado)**.
 
-Características:
-
-* Descarga automática la primera vez (~300 MB)
+* Se descarga automáticamente la primera vez (~300 MB) en `data/models/`
 * Funciona en CPU (no requiere GPU)
-* No se entrena desde cero
-* Genera embeddings de 512 dimensiones
-* Registro facial con 3–5 fotos
-* Embedding promedio para mayor precisión
-* Check-in automático en tiempo real
+* No se entrena desde cero — registra embeddings por miembro
+* Embeddings de 512 dimensiones, comparación por distancia coseno
+* Registro con múltiples fotos → embedding promedio
+* Check-in automático en tiempo real (cada 800 ms)
+* Thread-safe con `RLock` para acceso concurrente
 
 ---
 
 # 🔐 Seguridad
 
-* Autenticación con JWT
+* Autenticación con JWT (firmado con clave configurable)
 * Contraseñas hasheadas con bcrypt
-* Protección por roles administrativos
-* Soporte WebAuthn (Windows Hello / Touch ID)
+* Roles: `superadmin` / `admin` / `staff`
+* Nginx: rate limiting en login (5 req/min), cabeceras HSTS, X-Frame-Options
+* Systemd: `PrivateTmp`, `ProtectSystem=strict`, `NoNewPrivileges`
+* Usuario de sistema dedicado `gymos` (sin shell)
 
 ---
 
 # 📊 Funcionalidades
 
-* ✅ Registro de miembros con fotografía
-* ✅ Reconocimiento facial en tiempo real
-* ✅ Registro biométrico facial
-* ✅ Huella dactilar (WebAuthn)
-* ✅ Check-in automático
+* ✅ Registro de miembros con reconocimiento facial
+* ✅ Check-in automático por cara
 * ✅ Gestión de planes y membresías
 * ✅ Control de pagos e historial
-* ✅ Dashboard con estadísticas
-* ✅ Anuncios de voz programados
+* ✅ Dashboard con estadísticas en tiempo real
+* ✅ Anuncios de voz programados (TTS)
+* ✅ Promociones y descuentos con validación
+* ✅ Exportación de reportes en CSV
 * ✅ Configuración general del gimnasio
+* ✅ Gestión de usuarios admin con roles
 
 ---
 
 # 💻 Requisitos de Hardware
 
-| Componente | Mínimo       | Recomendado            |
-| ---------- | ------------ | ---------------------- |
-| CPU        | Intel i5 8va | i7 10ma o superior     |
-| RAM        | 8 GB         | 16 GB                  |
-| Disco      | 5 GB libres  | SSD 20 GB              |
-| Webcam     | 720p         | 1080p                  |
-| Sistema    | Windows 10   | Windows 11 / Ubuntu 22 |
+| Componente | Mínimo           | Recomendado              |
+|------------|------------------|--------------------------|
+| CPU        | Intel i5 8va gen | i7 10ma gen o superior   |
+| RAM        | 8 GB             | 16 GB                    |
+| Disco      | 5 GB libres      | SSD 20 GB                |
+| Webcam     | 720p             | 1080p                    |
+| Sistema    | Ubuntu 22.04     | Ubuntu 24.04 / Windows 11|
 
 ---
 
 # 📦 Dependencias Principales
 
-* fastapi
-* uvicorn
-* sqlalchemy
-* bcrypt
-* python-jose
-* insightface
-* opencv-python
-* numpy
+* `fastapi` + `uvicorn` — servidor web ASGI
+* `sqlalchemy` — ORM y migraciones
+* `python-jose` + `bcrypt` — autenticación
+* `insightface` + `onnxruntime` — reconocimiento facial
+* `opencv-python` + `numpy` — procesamiento de imagen
+* `Pillow` — conversión de imágenes
 
 ---
 
 # 🔮 Futuras Mejoras
 
 * Multi-sucursal
-* Dockerización
+* Docker / docker-compose
 * Soporte PostgreSQL
-* Control de acceso con hardware externo
+* Control de acceso con hardware (torniquete)
 * Dashboard analítico avanzado
-* Notificaciones automatizadas
+* Notificaciones automatizadas (email / SMS)
