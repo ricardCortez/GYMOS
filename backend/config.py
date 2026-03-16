@@ -40,17 +40,28 @@ AUDIO_DIR = DATA_DIR / "audio"
 CERTS_DIR = DATA_DIR / "certs"
 LOGS_DIR  = DATA_DIR / "logs"
 
-# ── Otras configuraciones ──────────────────────────────────────
+# ── Servidor ───────────────────────────────────────────────────
 SECRET_KEY = os.environ.get("GYMOS_SECRET", "gymos-secret-key-change-in-production-2024")
-PORT       = int(os.environ.get("GYMOS_PORT", "8000"))
+PORT       = int(os.environ.get("GYMOS_PORT",    "8000"))
+HOST       = os.environ.get("GYMOS_HOST",        "0.0.0.0")
+# WORKERS > 1 requiere que face_service NO use caché en memoria compartida.
+# Para este proyecto (1 instancia), mantener en 1.
+WORKERS    = int(os.environ.get("GYMOS_WORKERS", "1"))
+
+# Directorio donde InsightFace descarga el modelo buffalo_l (~300 MB).
+# Permite pre-cachear el modelo fuera del $HOME del usuario del servicio.
+MODELS_DIR = DATA_DIR / "models"
 
 def ensure_dirs():
     """Crea todas las carpetas de datos si no existen."""
-    for d in [DATA_DIR, AUDIO_DIR, CERTS_DIR, LOGS_DIR]:
+    for d in [DATA_DIR, AUDIO_DIR, CERTS_DIR, LOGS_DIR, MODELS_DIR]:
         d.mkdir(parents=True, exist_ok=True)
 
 def print_config():
+    print(f"  Host       :  {HOST}:{PORT}")
+    print(f"  Workers    :  {WORKERS}")
     print(f"  Datos      :  {DATA_DIR}")
     print(f"  Base datos :  {DB_PATH}")
     print(f"  Audios     :  {AUDIO_DIR}")
+    print(f"  Modelos IA :  {MODELS_DIR}")
     print(f"  Certs SSL  :  {CERTS_DIR}")

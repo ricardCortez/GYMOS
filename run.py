@@ -3,14 +3,18 @@
 GymOS - Script de inicio
 
 Uso:
-  python run.py           → HTTP  (solo este PC,  cámara funciona)
-  python run.py --https   → HTTPS (red local,      cámara funciona en otros PCs)
-  python run.py --dev     → HTTP  con auto-reload  (desarrollo)
+  python run.py            → HTTP  en 0.0.0.0:8000   (acceso directo, cámara local)
+  python run.py --https    → HTTPS con cert autofirmado (cámara desde red local)
+  python run.py --dev      → HTTP  con auto-reload      (desarrollo)
 
-Variables de entorno (o .env):
-  GYMOS_DATA_DIR   → ruta alternativa para datos/DB (ej: /mnt/data/gymOS)
-  GYMOS_SECRET     → clave secreta JWT (cambiar en producción)
-  GYMOS_PORT       → puerto del servidor (default: 8000)
+En producción detrás de Nginx el servidor se configura con variables de entorno:
+  GYMOS_HOST=127.0.0.1    → solo escucha en loopback (Nginx hace el proxy)
+  GYMOS_PORT=8000
+  GYMOS_WORKERS=1         → 1 worker (face_service usa cache en memoria)
+
+Variables adicionales (ver .env.example):
+  GYMOS_SECRET   → clave JWT
+  GYMOS_DATA_DIR → ruta de datos/BD
 """
 import sys
 import socket
@@ -19,8 +23,8 @@ import pathlib
 BASE_DIR = pathlib.Path(__file__).parent
 sys.path.insert(0, str(BASE_DIR))
 
-# Importar configuración centralizada (respeta GYMOS_DATA_DIR, GYMOS_PORT, etc.)
-from backend.config import CERTS_DIR, PORT, ensure_dirs
+# Configuración centralizada (carga .env automáticamente)
+from backend.config import CERTS_DIR, PORT, HOST, WORKERS, ensure_dirs, print_config
 
 ensure_dirs()
 
@@ -102,21 +106,29 @@ def generate_self_signed_cert(ip: str) -> bool:
 
 
 if __name__ == "__main__":
-    use_https = "--https" in sys.argv
-    dev_mode  = "--dev"   in sys.argv
+    use_https = "--https"  in sys.argv
+    dev_mode  = "--dev"    in sys.argv
+
+    # Detrás de Nginx (GYMOS_HOST=127.0.0.1) no necesita HTTPS propio
+    behind_proxy = HOST == "127.0.0.1"
+
     ip = get_local_ip()
 
     print()
-    print("=" * 58)
+    print("=" * 62)
     print("   GymOS  -  Sistema de Gestión de Gimnasio")
     if dev_mode:
         print("   [MODO DESARROLLO - auto-reload activo]")
-    print("=" * 58)
+    if behind_proxy:
+        print("   [MODO PRODUCCIÓN - detrás de Nginx]")
+    print("=" * 62)
+    print_config()
+    print("=" * 62)
 
     ssl_keyfile  = None
     ssl_certfile = None
 
-    if use_https:
+    if use_https and not behind_proxy:
         ok = generate_self_signed_cert(ip)
         if ok:
             ssl_certfile = str(CERT_FILE)
@@ -127,31 +139,29 @@ if __name__ == "__main__":
             print("   IMPORTANTE: La primera vez que abras desde otra PC,")
             print("   el navegador mostrará 'Sitio no seguro'.")
             print("   Haz clic en 'Configuración avanzada' → 'Continuar'.")
-            print("   Después la cámara funcionará normalmente.")
         else:
-            print(f"   Local :   http://localhost:{PORT}  (sin HTTPS)")
-            use_https = False
-    else:
+            print(f"   Iniciando en HTTP (sin certificado SSL)")
+    elif not behind_proxy:
         print(f"   Local :   http://localhost:{PORT}")
         print(f"   LAN   :   http://{ip}:{PORT}  (sin cámara desde red)")
         print()
-        print("   La cámara NO funcionará desde otras PCs en HTTP.")
-        print("   Para acceso con cámara desde la red local:")
-        print("       pip install cryptography")
-        print(f"      python run.py --https")
-        print(f"      Luego abre: https://{ip}:{PORT}")
+        print("   Para cámara en red local: python run.py --https")
+
+    if behind_proxy:
+        print(f"   Uvicorn escucha en: {HOST}:{PORT}  (Nginx hace el proxy)")
 
     print("   Ctrl+C para detener")
-    print("=" * 58)
+    print("=" * 62)
     print()
 
     try:
         import uvicorn
         uvicorn.run(
             "backend.main:app",
-            host="0.0.0.0",
+            host=HOST,
             port=PORT,
-            reload=dev_mode,     # True solo con --dev (nunca en producción)
+            workers=WORKERS,
+            reload=dev_mode and not behind_proxy,  # nunca recargar en producción
             log_level="info",
             ssl_certfile=ssl_certfile,
             ssl_keyfile=ssl_keyfile,

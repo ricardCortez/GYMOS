@@ -1,10 +1,7 @@
 # Entorno virtual
 venv/
 .venv/
-
-# Scripts locales de instalación
-instalar_linux.sh
-instalar_windows.bat
+env/
 
 # Archivos de entorno
 .env
@@ -12,16 +9,56 @@ instalar_windows.bat
 # Caché de Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
 
 # Archivos de sistema
 .DS_Store
 Thumbs.db
+*.swp
+*.swo
+*~
 
 # Base de datos
 *.db
+*.db-shm
+*.db-wal
 
-# Carpeta de datos
+# Carpeta de datos (runtime)
 data/
 
 # Archivos de audio
 *.mp3
+*.wav
+*.ogg
+
+# Logs
+*.log
+logs/
+
+# Certificados SSL (generados en runtime)
+*.pem
+*.key
+*.crt
+
+# InsightFace modelo (descargado en runtime, ~300 MB)
+models/
+.insightface/
+
+# IDE
+.vscode/settings.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Tests
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS
+.nfs*

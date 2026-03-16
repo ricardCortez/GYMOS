@@ -28,10 +28,18 @@ class FaceService:
         if not AVAILABLE:
             return False
         try:
-            self.app = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
+            from .config import MODELS_DIR
+            # root= controla dónde InsightFace busca/descarga el modelo buffalo_l.
+            # En producción apunta a data/models/ (dentro de GYMOS_DATA_DIR),
+            # evitando que el modelo se guarde en el $HOME del usuario del servicio.
+            self.app = FaceAnalysis(
+                name="buffalo_l",
+                root=str(MODELS_DIR),
+                providers=["CPUExecutionProvider"],
+            )
             self.app.prepare(ctx_id=0, det_size=(640, 640))
             self._ready = True
-            logger.info("Modelo InsightFace buffalo_l listo (CPU)")
+            logger.info(f"Modelo InsightFace buffalo_l listo (CPU) — {MODELS_DIR}")
             return True
         except Exception as e:
             logger.error(f"Error cargando modelo: {e}")
