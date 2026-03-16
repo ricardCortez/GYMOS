@@ -10,6 +10,13 @@ Uso:
 """
 import sys, os, socket, subprocess, pathlib
 
+<<<<<<< HEAD
+BASE_DIR = pathlib.Path(__file__).parent
+CERT_DIR = BASE_DIR / "data" / "certs"
+CERT_FILE = CERT_DIR / "cert.pem"
+KEY_FILE  = CERT_DIR / "key.pem"
+
+=======
 BASE_DIR = pathlib.Path(__file__).parent
 # Import paths from config (respects GYMOS_DATA_DIR env var)
 import sys
@@ -20,6 +27,7 @@ CERT_FILE = CERTS_DIR / "cert.pem"
 KEY_FILE  = CERTS_DIR / "key.pem"
 ensure_dirs()
 
+>>>>>>> 7694eb635fdf31c84e319458855d4c90ad7ea356
 def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
@@ -93,6 +101,59 @@ if __name__ == "__main__":
     use_https = "--https" in sys.argv
     ip = get_local_ip()
 
+<<<<<<< HEAD
+    print()
+    print("=" * 58)
+    print("   GymOS  -  Sistema de Gestión de Gimnasio")
+    print("=" * 58)
+
+    ssl_keyfile  = None
+    ssl_certfile = None
+
+    if use_https:
+        ok = generate_self_signed_cert(ip)
+        if ok:
+            ssl_certfile = str(CERT_FILE)
+            ssl_keyfile  = str(KEY_FILE)
+            print(f"   Local :   https://localhost:8000")
+            print(f"   LAN   :   https://{ip}:8000")
+            print()
+            print("   IMPORTANTE: La primera vez que abras desde otra PC,")
+            print("   el navegador mostrará 'Sitio no seguro'.")
+            print("   Haz clic en 'Configuración avanzada' → 'Continuar'.")
+            print("   Después la cámara funcionará normalmente.")
+        else:
+            print(f"   Local :   http://localhost:8000  (sin HTTPS)")
+            use_https = False
+    else:
+        print(f"   Local :   http://localhost:8000")
+        print(f"   LAN   :   http://{ip}:8000  (sin cámara)")
+        print()
+        print("   ⚠  La cámara NO funcionará desde otras PCs en HTTP.")
+        print("   ✅  Para acceso con cámara desde la red local:")
+        print("       pip install cryptography")
+        print(f"      python run.py --https")
+        print(f"      Luego abre: https://{ip}:8000")
+
+    print("   Ctrl+C para detener")
+    print("=" * 58)
+    print()
+
+    try:
+        import uvicorn
+        uvicorn.run(
+            "backend.main:app",
+            host="0.0.0.0",
+            port=8000,
+            reload=False,
+            log_level="info",
+            ssl_certfile=ssl_certfile,
+            ssl_keyfile=ssl_keyfile,
+        )
+    except ImportError:
+        print("ERROR: Ejecuta primero: pip install -r requirements.txt")
+        sys.exit(1)
+=======
     print()
     print("=" * 58)
     print("   GymOS  -  Sistema de Gestión de Gimnasio")
@@ -152,3 +213,4 @@ if __name__ == "__main__":
         traceback.print_exc()
         print(f"\nERROR al iniciar: {_e}")
         sys.exit(1)
+>>>>>>> 7694eb635fdf31c84e319458855d4c90ad7ea356

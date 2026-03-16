@@ -45,6 +45,34 @@ Si ya tienes el entorno configurado:
 pip install -r requirements.txt
 python run.py
 ```
+<<<<<<< HEAD
+gymOS/
+├── backend/
+    ├── main.py          →  84 líneas  (antes 500+)  solo inicializa
+    ├── auth.py          →  41 líneas  JWT + bcrypt
+    ├── database.py      → 230 líneas  modelos SQLAlchemy
+    ├── face_service.py  → 142 líneas  InsightFace
+    └── routes/
+        ├── __init__.py
+        ├── plans.py          →  72 líneas
+        ├── members.py        →  90 líneas
+        ├── face.py           → 107 líneas
+        ├── attendance.py     →  98 líneas
+        ├── memberships.py    → 107 líneas
+        ├── payments.py       →  48 líneas
+        ├── announcements.py  →  65 líneas
+        ├── settings.py       →  34 líneas
+        ├── dashboard.py      →  36 líneas
+        ├── admin_users.py    → 176 líneas  (auth + usuarios)
+        └── audio.py          → 105 líneas
+├── frontend/
+│   ├── index.html   ← Solo estructura HTML + CSS (58KB)
+    └── app.js       ← Toda la lógica (93KB)
+├── data/                    ← gymOS.db se crea aquí
+├── requirements.txt
+└── run.py                   ← Arranca todo
+=======
+>>>>>>> 7694eb635fdf31c84e319458855d4c90ad7ea356
 
 Servidor disponible en:
 
