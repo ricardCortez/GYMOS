@@ -1,17 +1,11 @@
-<!-- Active promotions banner strip -->
-      <div id="promo-banners" style="display:none;gap:10px;flex-wrap:wrap;margin-bottom:14px"></div>
-
-      <!-- Header -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-        <div>
-          <div style="font-size:22px;font-weight:800">🏷️ Promociones</div>
-          <div style="font-size:12px;color:var(--t2);margin-top:2px">Descuentos por tiempo limitado para tus planes</div>
-        </div>
-        <button class="btn-p" onclick="openPromoModal()">＋ Nueva Promoción</button>
-      </div>
-
-      <!-- Promo cards grid -->
-      </div>
-        <div id="promo-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px"></div>
-        <div class="loading"><div class="spin"></div>Cargando...</div>
-      </div>
+<div id="promo-banners" style="display:none;gap:10px;flex-wrap:wrap;margin-bottom:14px"></div>
+<div class="page-header">
+  <div>
+    <div class="page-header-title">Promociones</div>
+    <div class="page-header-sub">Descuentos por tiempo limitado para tus planes</div>
+  </div>
+  <button class="btn-p" onclick="openPromoModal()">＋ Nueva Promoción</button>
+</div>
+<div id="promo-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px">
+  <div class="loading"><div class="spin"></div>Cargando...</div>
+</div>

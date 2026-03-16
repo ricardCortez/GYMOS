@@ -1,22 +1,28 @@
+<div class="page-header">
+  <div>
+    <div class="page-header-title">Membresías</div>
+    <div class="page-header-sub">Planes y contratos activos</div>
+  </div>
+</div>
 <div class="tabs">
-        <div class="tab active" onclick="msTab('plans',this)">Planes</div>
-        <div class="tab" onclick="msTab('active',this)">Activas</div>
-        <div class="tab" onclick="msTab('expired',this)">Vencidas</div>
-      </div>
-      <div id="ms-plans">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <div style="font-size:13px;color:var(--t2)">Planes disponibles en tu gimnasio</div>
-          <button class="btn-p" onclick="openPlanModal()">✚ Nuevo Plan</button>
-        </div>
-        <div class="plan-grid" id="plan-grid"></div>
-      </div>
-      <div id="ms-active" style="display:none">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-          <div class="search-wrap" style="min-width:140px"><input id="ms-q" placeholder="Buscar miembro..." oninput="renderMemberships()"></div>
-          <button class="btn-p" onclick="openAssignMs()">✚ Asignar Membresía</button>
-        </div>
-        <div class="panel"><table class="tbl"><thead><tr><th>Miembro</th><th>Plan</th><th>Inicio</th><th>Vencimiento</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="ms-tbody"></tbody></table></div>
-      </div>
-      <div id="ms-expired" style="display:none">
-        <div class="panel"><table class="tbl"><thead><tr><th>Miembro</th><th>Plan</th><th>Venció</th><th>Acciones</th></tr></thead><tbody id="ms-exp-tbody"></tbody></table></div>
-      </div>
+  <div class="tab active" onclick="msTab('plans',this)">Planes</div>
+  <div class="tab" onclick="msTab('active',this)">Activas</div>
+  <div class="tab" onclick="msTab('expired',this)">Vencidas</div>
+</div>
+<div id="ms-plans">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <div style="font-size:13px;color:var(--t2)">Planes disponibles en tu gimnasio</div>
+    <button class="btn-p" onclick="openPlanModal()">✚ Nuevo Plan</button>
+  </div>
+  <div class="plan-grid" id="plan-grid"></div>
+</div>
+<div id="ms-active" style="display:none">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+    <div class="search-wrap" style="min-width:140px"><input id="ms-q" placeholder="Buscar miembro..." oninput="renderMemberships()"></div>
+    <button class="btn-p" onclick="openAssignMs()">✚ Asignar Membresía</button>
+  </div>
+  <div class="panel"><table class="tbl"><thead><tr><th>Miembro</th><th>Plan</th><th>Inicio</th><th>Vencimiento</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="ms-tbody"></tbody></table></div>
+</div>
+<div id="ms-expired" style="display:none">
+  <div class="panel"><table class="tbl"><thead><tr><th>Miembro</th><th>Plan</th><th>Venció</th><th>Acciones</th></tr></thead><tbody id="ms-exp-tbody"></tbody></table></div>
+</div>

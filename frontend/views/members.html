@@ -1,9 +1,15 @@
-<div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-        <div class="search-wrap" style="flex:1;min-width:120px"><input id="mem-q" placeholder="Buscar por nombre, DNI, email..." oninput="renderMembers()"></div>
-        <select id="mem-filter" onchange="renderMembers()" style="background:var(--s2);border:1px solid var(--b1);color:var(--text);border-radius:var(--r);padding:8px 11px;font-size:13px;min-width:100px">
-          <option value="">Todos los planes</option>
-        </select>
-        <button class="btn-s" onclick="exportMembers()" title="Exportar miembros a CSV">📥 CSV</button>
-        <button class="btn-p" onclick="nav('register')">✚ Nuevo Miembro</button>
-      </div>
-      <div class="member-grid" id="member-grid"></div>
+<div class="page-header">
+  <div>
+    <div class="page-header-title">Miembros</div>
+    <div class="page-header-sub">Gestión de clientes del gimnasio</div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <div class="search-wrap"><input id="mem-q" placeholder="Buscar nombre, DNI, email..." oninput="renderMembers()"></div>
+    <select id="mem-filter" onchange="renderMembers()" style="background:var(--s2);border:1px solid var(--b1);color:var(--text);border-radius:var(--r);padding:8px 11px;font-size:13px">
+      <option value="">Todos los planes</option>
+    </select>
+    <button class="btn-s" onclick="exportMembers()" title="Exportar CSV">📥 CSV</button>
+    <button class="btn-p" onclick="nav('register')">✚ Nuevo Miembro</button>
+  </div>
+</div>
+<div class="member-grid" id="member-grid"></div>

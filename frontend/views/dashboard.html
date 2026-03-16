@@ -1,17 +1,23 @@
+<div class="page-header">
+  <div>
+    <div class="page-header-title">Dashboard</div>
+    <div class="page-header-sub">Resumen general del gimnasio</div>
+  </div>
+</div>
 <div class="stats-row" id="dash-kpis"></div>
-      <div class="g2">
-        <div class="panel span2">
-          <div class="ph"><span class="ph-title">⚡ Check-ins de Hoy</span>
-            <button class="btn-s" onclick="nav('attendance')">Ver todo →</button>
-          </div>
-          <div id="dash-checkins" style="padding:0 4px"><div class="loading"><div class="spin"></div>Cargando...</div></div>
-        </div>
-        <div class="panel">
-          <div class="ph"><span class="ph-title">⚠️ Próximas Renovaciones</span></div>
-          <div class="pb" id="dash-renewals"></div>
-        </div>
-        <div class="panel">
-          <div class="ph"><span class="ph-title">📊 Asistencia — Últimos 7 días</span></div>
-          <div class="pb"><div class="ch-wrap"><canvas id="dash-chart"></canvas></div></div>
-        </div>
-      </div>
+<div class="g2">
+  <div class="panel span2">
+    <div class="ph"><span class="ph-title">⚡ Check-ins de Hoy</span>
+      <button class="btn-s" onclick="nav('attendance')">Ver todo →</button>
+    </div>
+    <div id="dash-checkins" style="padding:0 4px"><div class="loading"><div class="spin"></div>Cargando...</div></div>
+  </div>
+  <div class="panel">
+    <div class="ph"><span class="ph-title">⚠️ Próximas Renovaciones</span></div>
+    <div class="pb" id="dash-renewals"></div>
+  </div>
+  <div class="panel">
+    <div class="ph"><span class="ph-title">📊 Asistencia — Últimos 7 días</span></div>
+    <div class="pb"><div class="ch-wrap"><canvas id="dash-chart"></canvas></div></div>
+  </div>
+</div>

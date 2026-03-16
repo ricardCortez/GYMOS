@@ -1,9 +1,17 @@
-<div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-  <div class="search-wrap" style="flex:1;min-width:120px"><input id="pay-q" placeholder="Buscar pago..." oninput="renderPayments()"></div>
-  <button class="btn-p" onclick="openPayModal()">✚ Registrar Pago</button>
+<div class="page-header">
+  <div>
+    <div class="page-header-title">Pagos</div>
+    <div class="page-header-sub">Historial de cobros e ingresos</div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <div class="search-wrap"><input id="pay-q" placeholder="Buscar pago..." oninput="renderPayments()"></div>
+    <button class="btn-p" onclick="openPayModal()">✚ Registrar Pago</button>
+  </div>
 </div>
 <div class="stats-row" id="pay-kpis"></div>
 <div class="panel">
   <div class="ph"><span class="ph-title">💰 Historial de Pagos</span></div>
-  <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="tbl"><thead><tr><th>Fecha</th><th>Miembro</th><th>Concepto</th><th>Monto</th><th>Método</th><th>Estado</th></tr></thead><tbody id="pay-tbody"></tbody></table></div>
+  <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+    <table class="tbl"><thead><tr><th>Fecha</th><th>Miembro</th><th>Concepto</th><th>Monto</th><th>Método</th><th>Estado</th></tr></thead><tbody id="pay-tbody"></tbody></table>
+  </div>
 </div>
