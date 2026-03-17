@@ -12,7 +12,12 @@
       "Bash(python -c \":*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(pm2 list:*)",
+      "Bash(systemctl list-units:*)",
+      "Bash(systemctl status:*)",
+      "Bash(curl -k https://localhost:8080/)",
+      "Bash(journalctl -u gymos.service -n 50 --no-pager)"
     ]
   }
 }
