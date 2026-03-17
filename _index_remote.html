@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GymOS</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="themes.css">
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-bg-glow"></div>
+  <div class="login-wrap">
+    <div class="login-logo">
+      <div class="login-logo-mark">G</div>
+      <div class="login-title">GymOS</div>
+      <div class="login-sub">Sistema de Gestión de Gimnasio</div>
+    </div>
+    <div class="login-box">
+      <div class="fg">
+        <label>Usuario</label>
+        <input id="l-user" type="text" placeholder="admin" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div class="fg">
+        <label>Contraseña</label>
+        <div style="position:relative">
+          <input id="l-pass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+          <span onclick="togglePassVis()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;color:var(--t3);user-select:none" id="l-eye">👁</span>
+        </div>
+      </div>
+      <div class="login-error" id="l-err">Usuario o contraseña incorrectos</div>
+      <button class="login-btn" id="l-btn" onclick="doLogin()">
+        <span id="l-btn-txt">Iniciar Sesión</span>
+      </button>
+    </div>
+    <div class="login-footer">GymOS v1.0 · Acceso seguro con JWT</div>
+  </div>
+</div>
+
+<div id="sb-backdrop" onclick="closeSidebar()"></div>
+<div id="sb">
+  <a class="sb-logo" href="#">
+    <div class="sb-logo-mark">G</div>
+    <div class="sb-logo-txt">Gym<span>OS</span></div>
+  </a>
+  <div class="sb-nav">
+    <div class="sb-sec">Principal</div>
+    <div class="sb-item active" data-view="dashboard"><span class="sb-icon">⊞</span>Dashboard</div>
+    <div class="sb-item" data-view="attendance"><span class="sb-icon">👁</span>Asistencia<span class="sb-badge cyan" id="sb-today">0</span></div>
+    <div class="sb-sec">Gestión</div>
+    <div class="sb-item" data-view="register"><span class="sb-icon">✚</span>Nuevo Miembro</div>
+    <div class="sb-item" data-view="members"><span class="sb-icon">◎</span>Miembros</div>
+    <div class="sb-item" data-view="memberships"><span class="sb-icon">◈</span>Membresías</div>
+    <div class="sb-item" data-view="payments"><span class="sb-icon">◆</span>Pagos</div>
+    <div class="sb-sec">Operaciones</div>
+    <div class="sb-item" data-view="announcements"><span class="sb-icon">▶</span>Anuncios</div>
+    <div class="sb-item" data-view="promotions"><span class="sb-icon">🏷</span>Promociones<span id="sb-promo-active" style="display:none;width:7px;height:7px;border-radius:50%;background:var(--green);margin-left:auto;animation:pulse 2s infinite"></span></div>
+    <div class="sb-item" data-view="reports"><span class="sb-icon">◉</span>Reportes</div>
+    <div class="sb-item" data-view="profiles"><span class="sb-icon">◑</span>Usuarios</div>
+    <div class="sb-item" data-view="settings"><span class="sb-icon">◌</span>Configuración</div>
+  </div>
+  <div class="sb-footer">
+    <div class="sb-clock" id="sb-clock">--:--</div>
+    <div class="sb-date" id="sb-date">-</div>
+    <div class="sb-sys">
+      <div class="dot dot-green" id="sys-dot"></div>
+      <span id="sys-txt">Conectando al servidor...</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="topbar">
+    <button id="sb-toggle" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+    <div>
+      <div class="tb-title" id="tb-title">Dashboard</div>
+      <div class="tb-sub" id="tb-sub">Resumen general</div>
+    </div>
+    <div class="tb-right">
+      <div class="tb-pill" id="face-pill">⏳ Cargando IA...</div>
+      <div class="tb-pill" id="api-pill">○ Servidor</div>
+      <div class="user-menu" id="user-menu-wrap">
+      <div class="tb-av" id="gym-av" onclick="toggleUserMenu()" style="cursor:pointer;position:relative">G</div>
+      <div class="user-menu-drop" id="user-menu-drop">
+        <div class="umd-head">
+          <div class="umd-name" id="umd-name">—</div>
+          <div class="umd-role badge" id="umd-role-badge">—</div>
+        </div>
+        <div class="umd-item" onclick="closeUserMenu();openMyProfile()">👤 Mi Perfil</div>
+        <div class="umd-item" onclick="closeUserMenu();openChangePass()">🔑 Cambiar Contraseña</div>
+        <div class="umd-sep"></div>
+        <div class="umd-item danger" onclick="doLogout()">⎋ Cerrar Sesión</div>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <div id="content">
+    <!-- Views loaded dynamically by loadView() in ui.js -->
+    <div id="view-placeholder" style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--t2)">
+      <div class="loading"><div class="spin"></div>Cargando...</div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+
+<!-- MODAL -->
+<div id="overlay">
+  <div class="modal" id="modal-box">
+    <div class="mh"><span class="mh-title" id="modal-title">-</span><button class="xbtn" onclick="closeModal()">✕</button></div>
+    <div class="mb" id="modal-body"></div>
+    <div class="mf" id="modal-foot"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<<<<<<< HEAD
+=======
+<!-- ═══════════════════════════════════════════════════════
+     JS MODULES — load order matters
+═══════════════════════════════════════════════════════ -->
+<script src="js/core.js"></script>
+<script src="js/camera.js"></script>
+<script src="js/tts.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/views/dashboard.js"></script>
+<script src="js/views/attendance.js"></script>
+<script src="js/views/register.js"></script>
+<script src="js/views/members.js"></script>
+<script src="js/views/memberships.js"></script>
+<script src="js/views/payments.js"></script>
+<script src="js/views/announcements.js"></script>
+<script src="js/views/reports.js"></script>
+<script src="js/views/settings.js"></script>
+<script src="js/views/profiles.js"></script>
+<script src="js/views/audio.js"></script>
+<script src="js/views/promotions.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/boot.js"></script>
+>>>>>>> 7694eb635fdf31c84e319458855d4c90ad7ea356
+
+<<<<<<< HEAD
+<script src="app.js"></script>
+=======
+>>>>>>> 7694eb635fdf31c84e319458855d4c90ad7ea356
+</body>
+</html>

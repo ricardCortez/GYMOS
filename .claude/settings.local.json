@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l /d/Proyectos/GYMOS/frontend/*.html /d/Proyectos/GYMOS/frontend/*.js)",
+      "Bash(ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no 192.168.50.70 \"whoami && uname -a && lsb_release -a 2>/dev/null || cat /etc/os-release\")",
+      "Bash(sshpass -p \"admin123\" ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no ubuntu@192.168.50.70 \"whoami && uname -a && lsb_release -a 2>/dev/null\")",
+      "Bash(where plink:*)",
+      "Bash(python3 -c \"import paramiko; print\\(''paramiko ok''\\)\")",
+      "Bash(python -c \"import paramiko; print\\(''paramiko ok''\\)\")",
+      "Bash(pip install:*)",
+      "Bash(python3 -c \":*)",
+      "Bash(python -c \":*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
+    ]
+  }
+}
